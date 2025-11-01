@@ -2,11 +2,12 @@
 export interface Task {
   id: string;
   title: string;
-  dueHour: number; // 0-23
+  dueHour: number; // 0-23, or -1 for anytime tasks
   dayKey: string; // YYYY-MM-DD
   isDone: boolean;
   isSkipped: boolean;
   isMissed: boolean;
+  isAnytime: boolean; // true if task can be done anytime during the day
 }
 
 export interface PetState {

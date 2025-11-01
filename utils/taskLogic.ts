@@ -15,11 +15,15 @@ export const getNearestTaskIndex = (tasks: Task[], graceMinutes: number): number
     return 0;
   }
   
-  // Find the nearest task considering grace period
+  // Separate anytime and time-specific tasks
+  const anytimeTasks = todayTasks.filter(t => t.isAnytime);
+  const timeSpecificTasks = todayTasks.filter(t => !t.isAnytime);
+  
+  // Find the nearest time-specific task
   let nearestIndex = 0;
   let minDiff = Infinity;
   
-  todayTasks.forEach((task, index) => {
+  timeSpecificTasks.forEach((task, index) => {
     const taskHour = task.dueHour;
     let diff = 0;
     
@@ -35,7 +39,7 @@ export const getNearestTaskIndex = (tasks: Task[], graceMinutes: number): number
     
     if (diff < minDiff) {
       minDiff = diff;
-      nearestIndex = index;
+      nearestIndex = todayTasks.indexOf(task);
     }
   });
   
@@ -98,4 +102,16 @@ export const performRollover = (state: AppState): AppState => {
 
 export const updateTaskTitle = (tasks: Task[], taskId: string, newTitle: string): Task[] => {
   return tasks.map(t => t.id === taskId ? { ...t, title: newTitle } : t);
+};
+
+export const getSortedTasks = (tasks: Task[]): Task[] => {
+  // Sort tasks: time-specific tasks first (by hour), then anytime tasks
+  return [...tasks].sort((a, b) => {
+    if (a.isAnytime && !b.isAnytime) return 1;
+    if (!a.isAnytime && b.isAnytime) return -1;
+    if (!a.isAnytime && !b.isAnytime) {
+      return a.dueHour - b.dueHour;
+    }
+    return 0;
+  });
 };

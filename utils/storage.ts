@@ -16,17 +16,52 @@ const DEFAULT_PET_STATE: PetState = {
 
 export const getDefaultTasks = (dayKey: string): Task[] => {
   const tasks: Task[] = [];
-  for (let hour = 6; hour <= 22; hour++) {
+  
+  // Add some anytime tasks
+  const anytimeTasks = [
+    'Drink 8 glasses of water',
+    'Exercise for 30 minutes',
+    'Read for 20 minutes',
+    'Meditate for 10 minutes',
+  ];
+  
+  anytimeTasks.forEach((title, index) => {
+    tasks.push({
+      id: `${dayKey}-anytime-${index}`,
+      title,
+      dueHour: -1,
+      dayKey,
+      isDone: false,
+      isSkipped: false,
+      isMissed: false,
+      isAnytime: true,
+    });
+  });
+  
+  // Add time-specific tasks
+  const timeSpecificTasks = [
+    { hour: 7, title: 'Morning routine' },
+    { hour: 9, title: 'Start work tasks' },
+    { hour: 12, title: 'Lunch break' },
+    { hour: 15, title: 'Afternoon check-in' },
+    { hour: 18, title: 'Evening workout' },
+    { hour: 20, title: 'Dinner time' },
+    { hour: 22, title: 'Night routine' },
+  ];
+  
+  timeSpecificTasks.forEach(({ hour, title }) => {
     tasks.push({
       id: `${dayKey}-${hour}`,
-      title: `Task at ${hour}:00`,
+      title,
       dueHour: hour,
       dayKey,
       isDone: false,
       isSkipped: false,
       isMissed: false,
+      isAnytime: false,
     });
-  }
+  });
+  
   return tasks;
 };
 

@@ -38,6 +38,10 @@ export const penalizeMissedTasks = (petState: PetState, missedCount: number): Pe
   };
 };
 
+export const missTask = (petState: PetState): PetState => {
+  return penalizeMissedTasks(petState, 1);
+};
+
 export const getProgressToNextStage = (xp: number, stageIndex: number): number => {
   const currentStage = PET_STAGES[stageIndex];
   const nextStage = PET_STAGES[stageIndex + 1];
