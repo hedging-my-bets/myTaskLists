@@ -1,161 +1,222 @@
-import React from "react";
-import { Stack, Link } from "expo-router";
-import { FlatList, Pressable, StyleSheet, View, Text, Alert, Platform } from "react-native";
-import { IconSymbol } from "@/components/IconSymbol";
-import { GlassView } from "expo-glass-effect";
-import { useTheme } from "@react-navigation/native";
 
-const ICON_COLOR = "#007AFF";
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, useColorScheme, ActivityIndicator, RefreshControl } from 'react-native';
+import { Stack } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAppState } from '@/hooks/useAppState';
+import { getTodayKey } from '@/utils/storage';
+import PetDisplay from '@/components/PetDisplay';
+import TaskCard from '@/components/TaskCard';
+import TaskList from '@/components/TaskList';
+import { colors, spacing, typography } from '@/styles/commonStyles';
 
 export default function HomeScreen() {
-  const theme = useTheme();
-  const modalDemos = [
-    {
-      title: "Standard Modal",
-      description: "Full screen modal presentation",
-      route: "/modal",
-      color: "#007AFF",
-    },
-    {
-      title: "Form Sheet",
-      description: "Bottom sheet with detents and grabber",
-      route: "/formsheet",
-      color: "#34C759",
-    },
-    {
-      title: "Transparent Modal",
-      description: "Overlay without obscuring background",
-      route: "/transparent-modal",
-      color: "#FF9500",
-    }
-  ];
+  const colorScheme = useColorScheme();
+  const theme = colorScheme === 'dark' ? colors.dark : colors.light;
+  
+  const {
+    state,
+    loading,
+    completeCurrentTask,
+    skipCurrentTask,
+    nextTask,
+    prevTask,
+    editTaskTitle,
+    refreshState,
+  } = useAppState();
 
-  const renderModalDemo = ({ item }: { item: (typeof modalDemos)[0] }) => (
-    <GlassView style={[
-      styles.demoCard,
-      Platform.OS !== 'ios' && { backgroundColor: theme.dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }
-    ]} glassEffectStyle="regular">
-      <View style={[styles.demoIcon, { backgroundColor: item.color }]}>
-        <IconSymbol name="square.grid.3x3" color="white" size={24} />
+  const [refreshing, setRefreshing] = React.useState(false);
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    await refreshState();
+    setRefreshing(false);
+  }, [refreshState]);
+
+  useEffect(() => {
+    // Check for rollover every minute
+    const interval = setInterval(() => {
+      refreshState();
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [refreshState]);
+
+  if (loading || !state) {
+    return (
+      <View style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
+        <ActivityIndicator size="large" color={theme.primary} />
+        <Text style={[styles.loadingText, { color: theme.textSecondary }]}>
+          Loading PetProgress...
+        </Text>
       </View>
-      <View style={styles.demoContent}>
-        <Text style={[styles.demoTitle, { color: theme.colors.text }]}>{item.title}</Text>
-        <Text style={[styles.demoDescription, { color: theme.dark ? '#98989D' : '#666' }]}>{item.description}</Text>
+    );
+  }
+
+  const todayKey = getTodayKey();
+  const todayTasks = state.tasks.filter(t => t.dayKey === todayKey);
+  const currentTask = todayTasks[state.currentTaskIndex];
+
+  if (!currentTask) {
+    return (
+      <View style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
+        <Text style={[styles.errorText, { color: theme.error }]}>
+          No tasks available
+        </Text>
       </View>
-      <Link href={item.route as any} asChild>
-        <Pressable>
-          <GlassView style={[
-            styles.tryButton,
-            Platform.OS !== 'ios' && { backgroundColor: theme.dark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)' }
-          ]} glassEffectStyle="clear">
-            <Text style={[styles.tryButtonText, { color: theme.colors.primary }]}>Try It</Text>
-          </GlassView>
-        </Pressable>
-      </Link>
-    </GlassView>
-  );
+    );
+  }
 
-  const renderHeaderRight = () => (
-    <Pressable
-      onPress={() => Alert.alert("Not Implemented", "This feature is not implemented yet")}
-      style={styles.headerButtonContainer}
-    >
-      <IconSymbol name="plus" color={theme.colors.primary} />
-    </Pressable>
-  );
-
-  const renderHeaderLeft = () => (
-    <Pressable
-      onPress={() => Alert.alert("Not Implemented", "This feature is not implemented yet")}
-      style={styles.headerButtonContainer}
-    >
-      <IconSymbol
-        name="gear"
-        color={theme.colors.primary}
-      />
-    </Pressable>
-  );
+  const completedCount = todayTasks.filter(t => t.isDone).length;
+  const skippedCount = todayTasks.filter(t => t.isSkipped).length;
 
   return (
-    <>
-      {Platform.OS === 'ios' && (
-        <Stack.Screen
-          options={{
-            title: "Building the app...",
-            headerRight: renderHeaderRight,
-            headerLeft: renderHeaderLeft,
-          }}
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
+      <Stack.Screen 
+        options={{
+          title: 'PetProgress',
+          headerShown: false,
+        }} 
+      />
+      
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />
+        }
+      >
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: theme.text }]}>
+            PetProgress
+          </Text>
+          <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
+            Complete tasks to evolve your pet
+          </Text>
+        </View>
+
+        <PetDisplay petState={state.petState} />
+
+        <View style={styles.statsContainer}>
+          <View style={[styles.statCard, { backgroundColor: theme.card }]}>
+            <Text style={[styles.statValue, { color: theme.success }]}>
+              {completedCount}
+            </Text>
+            <Text style={[styles.statLabel, { color: theme.textSecondary }]}>
+              Completed
+            </Text>
+          </View>
+          
+          <View style={[styles.statCard, { backgroundColor: theme.card }]}>
+            <Text style={[styles.statValue, { color: theme.warning }]}>
+              {skippedCount}
+            </Text>
+            <Text style={[styles.statLabel, { color: theme.textSecondary }]}>
+              Skipped
+            </Text>
+          </View>
+          
+          <View style={[styles.statCard, { backgroundColor: theme.card }]}>
+            <Text style={[styles.statValue, { color: theme.primary }]}>
+              {todayTasks.length}
+            </Text>
+            <Text style={[styles.statLabel, { color: theme.textSecondary }]}>
+              Total
+            </Text>
+          </View>
+        </View>
+
+        <TaskCard
+          task={currentTask}
+          onComplete={completeCurrentTask}
+          onSkip={skipCurrentTask}
+          onPrev={prevTask}
+          onNext={nextTask}
+          onEditTitle={(newTitle) => editTaskTitle(currentTask.id, newTitle)}
+          taskNumber={state.currentTaskIndex + 1}
+          totalTasks={todayTasks.length}
         />
-      )}
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <FlatList
-          data={modalDemos}
-          renderItem={renderModalDemo}
-          keyExtractor={(item) => item.route}
-          contentContainerStyle={[
-            styles.listContainer,
-            Platform.OS !== 'ios' && styles.listContainerWithTabBar
-          ]}
-          contentInsetAdjustmentBehavior="automatic"
-          showsVerticalScrollIndicator={false}
-        />
-      </View>
-    </>
+
+        <TaskList tasks={todayTasks} currentTaskId={currentTask.id} />
+
+        <View style={styles.infoBox}>
+          <Text style={[styles.infoText, { color: theme.textSecondary }]}>
+            💡 Complete tasks to earn XP and evolve your pet
+          </Text>
+          <Text style={[styles.infoText, { color: theme.textSecondary }]}>
+            ⚠️ Missed tasks at midnight will reduce XP
+          </Text>
+          <Text style={[styles.infoText, { color: theme.textSecondary }]}>
+            ⚙️ Configure grace period in Settings
+          </Text>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor handled dynamically
   },
-  listContainer: {
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-  },
-  listContainerWithTabBar: {
-    paddingBottom: 100, // Extra padding for floating tab bar
-  },
-  demoCard: {
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  demoIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  loadingContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
   },
-  demoContent: {
+  loadingText: {
+    ...typography.body,
+    marginTop: spacing.md,
+  },
+  errorText: {
+    ...typography.h3,
+  },
+  scrollView: {
     flex: 1,
   },
-  demoTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 4,
-    // color handled dynamically
+  scrollContent: {
+    padding: spacing.lg,
+    gap: spacing.lg,
   },
-  demoDescription: {
-    fontSize: 14,
-    lineHeight: 18,
-    // color handled dynamically
+  header: {
+    alignItems: 'center',
+    marginBottom: spacing.md,
   },
-  headerButtonContainer: {
-    padding: 6,
+  title: {
+    ...typography.h1,
+    marginBottom: spacing.xs,
   },
-  tryButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 6,
+  subtitle: {
+    ...typography.body,
+    textAlign: 'center',
   },
-  tryButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    // color handled dynamically
+  statsContainer: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  statCard: {
+    flex: 1,
+    padding: spacing.md,
+    borderRadius: 12,
+    alignItems: 'center',
+    boxShadow: '0px 2px 8px rgba(139, 127, 214, 0.1)',
+    elevation: 2,
+  },
+  statValue: {
+    ...typography.h2,
+    marginBottom: spacing.xs,
+  },
+  statLabel: {
+    ...typography.caption,
+  },
+  infoBox: {
+    padding: spacing.lg,
+    gap: spacing.sm,
+    marginBottom: spacing.xxl,
+  },
+  infoText: {
+    ...typography.bodySmall,
+    lineHeight: 20,
   },
 });

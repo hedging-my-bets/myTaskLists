@@ -1,89 +1,107 @@
+
 import { StyleSheet, ViewStyle, TextStyle } from 'react-native';
 
+// PetProgress Color Palette - Purple/Lavender/Thistle theme
 export const colors = {
-  primary: '#162456',    // Material Blue
-  secondary: '#193cb8',  // Darker Blue
-  accent: '#64B5F6',     // Light Blue
-  background: '#101824',  // Keeping dark background
-  backgroundAlt: '#162133',  // Keeping dark background
-  text: '#e3e3e3',       // Keeping light text
-  grey: '#90CAF9',       // Light Blue Grey
-  card: '#193cb8',       // Keeping dark card background
+  // Light mode
+  light: {
+    background: '#F8F7FC',
+    card: '#FFFFFF',
+    text: '#2D2D3A',
+    textSecondary: '#6B6B7B',
+    primary: '#8B7FD6',
+    primaryDark: '#6B5FC7',
+    secondary: '#C8B8E8',
+    accent: '#E8DCFF',
+    success: '#4CAF50',
+    warning: '#FF9800',
+    error: '#F44336',
+    border: '#E5E5EA',
+    shadow: 'rgba(139, 127, 214, 0.15)',
+  },
+  // Dark mode
+  dark: {
+    background: '#1A1A24',
+    card: '#2D2D3A',
+    text: '#F8F7FC',
+    textSecondary: '#A8A8B8',
+    primary: '#A89FE8',
+    primaryDark: '#8B7FD6',
+    secondary: '#6B5FC7',
+    accent: '#4A3F7F',
+    success: '#66BB6A',
+    warning: '#FFA726',
+    error: '#EF5350',
+    border: '#3A3A4A',
+    shadow: 'rgba(0, 0, 0, 0.3)',
+  },
 };
 
-export const buttonStyles = StyleSheet.create({
-  instructionsButton: {
-    backgroundColor: colors.primary,
-    alignSelf: 'center',
-    width: '100%',
+export const spacing = {
+  xs: 4,
+  sm: 8,
+  md: 16,
+  lg: 24,
+  xl: 32,
+  xxl: 48,
+};
+
+export const borderRadius = {
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 24,
+  full: 9999,
+};
+
+export const typography = {
+  h1: {
+    fontSize: 32,
+    fontWeight: '700' as const,
+    lineHeight: 40,
   },
-  backButton: {
-    backgroundColor: colors.backgroundAlt,
-    alignSelf: 'center',
-    width: '100%',
+  h2: {
+    fontSize: 24,
+    fontWeight: '600' as const,
+    lineHeight: 32,
   },
-});
+  h3: {
+    fontSize: 20,
+    fontWeight: '600' as const,
+    lineHeight: 28,
+  },
+  body: {
+    fontSize: 16,
+    fontWeight: '400' as const,
+    lineHeight: 24,
+  },
+  bodySmall: {
+    fontSize: 14,
+    fontWeight: '400' as const,
+    lineHeight: 20,
+  },
+  caption: {
+    fontSize: 12,
+    fontWeight: '400' as const,
+    lineHeight: 16,
+  },
+};
 
 export const commonStyles = StyleSheet.create({
-  wrapper: {
-    backgroundColor: colors.background,
-    width: '100%',
-    height: '100%',
-  },
   container: {
     flex: 1,
-    backgroundColor: colors.background,
-    width: '100%',
-    height: '100%',
+  },
+  centered: {
     justifyContent: 'center',
     alignItems: 'center',
   },
-  content: {
-    flex: 1,
+  row: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    maxWidth: 800,
-    width: '100%',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: '800',
-    textAlign: 'center',
-    color: colors.text,
-    marginBottom: 10
-  },
-  text: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: colors.text,
-    marginBottom: 8,
-    lineHeight: 24,
-    textAlign: 'center',
-  },
-  section: {
-    width: '100%',
+  spaceBetween: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  buttonContainer: {
-    width: '100%',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  card: {
-    backgroundColor: colors.backgroundAlt,
-    borderColor: colors.grey,
-    borderWidth: 1,
-    borderRadius: 10,
-    padding: 10,
-    marginVertical: 8,
-    width: '100%',
-    boxShadow: '0px 2px 3px rgba(0, 0, 0, 0.1)',
-    elevation: 2,
-  },
-  icon: {
-    width: 60,
-    height: 60,
-    tintColor: "white",
   },
 });
