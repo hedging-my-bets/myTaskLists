@@ -1,39 +1,41 @@
 
 import { StyleSheet, ViewStyle, TextStyle } from 'react-native';
 
-// PetProgress Color Palette - Purple/Lavender/Thistle theme
+// PetProgress Color Palette - Bright-Trust (Dark) theme
 export const colors = {
-  // Light mode
+  // Light mode (keeping for compatibility, but app is primarily dark)
   light: {
     background: '#F8F7FC',
     card: '#FFFFFF',
     text: '#2D2D3A',
     textSecondary: '#6B6B7B',
-    primary: '#8B7FD6',
-    primaryDark: '#6B5FC7',
-    secondary: '#C8B8E8',
-    accent: '#E8DCFF',
-    success: '#4CAF50',
-    warning: '#FF9800',
-    error: '#F44336',
+    primary: '#60A5FA',
+    primaryDark: '#3B82F6',
+    secondary: '#22D3EE',
+    accent: '#A78BFA',
+    success: '#22C55E',
+    warning: '#FBBF24',
+    error: '#F87171',
     border: '#E5E5EA',
-    shadow: 'rgba(139, 127, 214, 0.15)',
+    shadow: 'rgba(96, 165, 250, 0.15)',
+    reward: '#34D399',
   },
-  // Dark mode
+  // Dark mode - Bright-Trust (Dark) palette
   dark: {
-    background: '#1A1A24',
-    card: '#2D2D3A',
-    text: '#F8F7FC',
-    textSecondary: '#A8A8B8',
-    primary: '#A89FE8',
-    primaryDark: '#8B7FD6',
-    secondary: '#6B5FC7',
-    accent: '#4A3F7F',
-    success: '#66BB6A',
-    warning: '#FFA726',
-    error: '#EF5350',
-    border: '#3A3A4A',
+    background: '#0B1220',
+    card: '#121826',
+    text: '#FFFFFF',
+    textSecondary: '#A8B1C7',
+    primary: '#60A5FA',
+    primaryDark: '#3B82F6',
+    secondary: '#22D3EE',
+    accent: '#A78BFA',
+    success: '#34D399',
+    warning: '#FBBF24',
+    error: '#F87171',
+    border: '#1F2937',
     shadow: 'rgba(0, 0, 0, 0.3)',
+    reward: '#22C55E',
   },
 };
 

@@ -11,19 +11,24 @@
     "splash": {
       "image": "./assets/images/natively-dark.png",
       "resizeMode": "contain",
-      "backgroundColor": "#8B7FD6"
+      "backgroundColor": "#60A5FA"
     },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.petprogress.app",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
+      },
+      "entitlements": {
+        "com.apple.security.application-groups": [
+          "group.com.petprogress.app"
+        ]
       }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/natively-dark.png",
-        "backgroundColor": "#8B7FD6"
+        "backgroundColor": "#60A5FA"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.petprogress.app",
@@ -49,7 +54,25 @@
     "plugins": [
       "expo-font",
       "expo-router",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "@bacons/apple-targets",
+        {
+          "targets": [
+            {
+              "bundleIdentifier": "com.petprogress.app.PetProgressWidget",
+              "targetName": "PetProgressWidget",
+              "type": "widget",
+              "deploymentTarget": "17.0",
+              "entitlements": {
+                "com.apple.security.application-groups": [
+                  "group.com.petprogress.app"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     ],
     "scheme": "petprogress",
     "experiments": {

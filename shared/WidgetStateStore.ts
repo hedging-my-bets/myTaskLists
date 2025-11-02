@@ -2,6 +2,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Task, PetState, Settings } from '@/types';
 import { getTodayKey } from '@/utils/storage';
+import { Platform } from 'react-native';
+import { saveToAppGroup, reloadWidget } from '@/modules/WidgetBridge';
 
 const WIDGET_STATE_KEY = '@PetProgress:widgetState';
 
@@ -16,8 +18,8 @@ export interface WidgetState {
 
 /**
  * Save widget state to shared storage
- * In a native implementation, this would use App Groups (UserDefaults with suiteName)
- * For React Native, we use AsyncStorage which can be accessed by both app and widget
+ * On iOS with App Groups, this uses UserDefaults with suiteName via native bridge
+ * Also saves to AsyncStorage for React Native access
  */
 export const saveWidgetState = async (state: WidgetState): Promise<void> => {
   try {
@@ -25,8 +27,24 @@ export const saveWidgetState = async (state: WidgetState): Promise<void> => {
       ...state,
       lastUpdated: Date.now(),
     };
-    await AsyncStorage.setItem(WIDGET_STATE_KEY, JSON.stringify(stateWithTimestamp));
-    console.log('Widget state saved:', stateWithTimestamp);
+    
+    const jsonString = JSON.stringify(stateWithTimestamp);
+    
+    // Save to AsyncStorage for React Native
+    await AsyncStorage.setItem(WIDGET_STATE_KEY, jsonString);
+    
+    // On iOS, also save to App Group shared container
+    if (Platform.OS === 'ios') {
+      await saveToAppGroup(WIDGET_STATE_KEY, jsonString);
+    }
+    
+    console.log('Widget state saved:', {
+      taskCount: stateWithTimestamp.todayTasks.length,
+      currentIndex: stateWithTimestamp.currentIndex,
+      petXP: stateWithTimestamp.petState.xp,
+      petStage: stateWithTimestamp.petState.stageIndex,
+      timestamp: new Date(stateWithTimestamp.lastUpdated).toISOString(),
+    });
   } catch (error) {
     console.error('Error saving widget state:', error);
   }
@@ -40,7 +58,13 @@ export const loadWidgetState = async (): Promise<WidgetState | null> => {
     const stored = await AsyncStorage.getItem(WIDGET_STATE_KEY);
     if (stored) {
       const state = JSON.parse(stored) as WidgetState;
-      console.log('Widget state loaded:', state);
+      console.log('Widget state loaded:', {
+        taskCount: state.todayTasks.length,
+        currentIndex: state.currentIndex,
+        petXP: state.petState.xp,
+        petStage: state.petState.stageIndex,
+        timestamp: new Date(state.lastUpdated).toISOString(),
+      });
       return state;
     }
   } catch (error) {
@@ -76,11 +100,12 @@ export const syncWidgetState = async (
 
 /**
  * Request widget reload
- * In native iOS, this would call WidgetCenter.shared.reloadTimelines(ofKind:)
- * For React Native, we'll use a notification or event system
+ * Calls WidgetCenter.shared.reloadTimelines(ofKind:) via native bridge
  */
 export const requestWidgetReload = async (): Promise<void> => {
-  console.log('Widget reload requested');
-  // In a native implementation, this would trigger widget refresh
-  // For now, we just log it
+  console.log('Widget reload requested - WidgetCenter.shared.reloadTimelines("PetProgressWidget")');
+  
+  if (Platform.OS === 'ios') {
+    await reloadWidget('PetProgressWidget');
+  }
 };
