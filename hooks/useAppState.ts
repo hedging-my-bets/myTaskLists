@@ -89,10 +89,12 @@ export const useAppState = () => {
     
     const todayKey = getTodayKey();
     const todayTasks = state.tasks.filter(t => t.dayKey === todayKey);
-    const currentTask = todayTasks[state.currentTaskIndex];
     
-    if (!currentTask || currentTask.isDone) {
-      console.log('No task to complete or already done');
+    // Find the first pending task
+    const currentTask = todayTasks.find(t => !t.isDone && !t.isSkipped && !t.isMissed);
+    
+    if (!currentTask) {
+      console.log('No pending task to complete');
       return;
     }
     
@@ -104,25 +106,10 @@ export const useAppState = () => {
     
     const newPetState = completeTask(state.petState);
     
-    // Move to next pending task after completion
-    const sortedTasks = [...updatedTasks]
-      .filter(t => t.dayKey === todayKey)
-      .sort((a, b) => {
-        const aIsPending = !a.isDone && !a.isSkipped && !a.isMissed;
-        const bIsPending = !b.isDone && !b.isSkipped && !b.isMissed;
-        if (aIsPending && !bIsPending) return -1;
-        if (!aIsPending && bIsPending) return 1;
-        return 0;
-      });
-    
-    const nextPendingIndex = sortedTasks.findIndex(t => !t.isDone && !t.isSkipped && !t.isMissed);
-    const newIndex = nextPendingIndex >= 0 ? nextPendingIndex : 0;
-    
     await updateState({
       ...state,
       tasks: updatedTasks,
       petState: newPetState,
-      currentTaskIndex: newIndex,
     });
     
     await requestWidgetReload();
@@ -133,10 +120,12 @@ export const useAppState = () => {
     
     const todayKey = getTodayKey();
     const todayTasks = state.tasks.filter(t => t.dayKey === todayKey);
-    const currentTask = todayTasks[state.currentTaskIndex];
     
-    if (!currentTask || currentTask.isSkipped) {
-      console.log('No task to skip or already skipped');
+    // Find the first pending task
+    const currentTask = todayTasks.find(t => !t.isDone && !t.isSkipped && !t.isMissed);
+    
+    if (!currentTask) {
+      console.log('No pending task to skip');
       return;
     }
     
@@ -146,24 +135,9 @@ export const useAppState = () => {
       t.id === currentTask.id ? { ...t, isSkipped: true, isDone: false, isMissed: false } : t
     );
     
-    // Move to next pending task after skipping
-    const sortedTasks = [...updatedTasks]
-      .filter(t => t.dayKey === todayKey)
-      .sort((a, b) => {
-        const aIsPending = !a.isDone && !a.isSkipped && !a.isMissed;
-        const bIsPending = !b.isDone && !b.isSkipped && !b.isMissed;
-        if (aIsPending && !bIsPending) return -1;
-        if (!aIsPending && bIsPending) return 1;
-        return 0;
-      });
-    
-    const nextPendingIndex = sortedTasks.findIndex(t => !t.isDone && !t.isSkipped && !t.isMissed);
-    const newIndex = nextPendingIndex >= 0 ? nextPendingIndex : 0;
-    
     await updateState({
       ...state,
       tasks: updatedTasks,
-      currentTaskIndex: newIndex,
     });
     
     await requestWidgetReload();
@@ -174,10 +148,12 @@ export const useAppState = () => {
     
     const todayKey = getTodayKey();
     const todayTasks = state.tasks.filter(t => t.dayKey === todayKey);
-    const currentTask = todayTasks[state.currentTaskIndex];
     
-    if (!currentTask || currentTask.isMissed) {
-      console.log('No task to miss or already missed');
+    // Find the first pending task
+    const currentTask = todayTasks.find(t => !t.isDone && !t.isSkipped && !t.isMissed);
+    
+    if (!currentTask) {
+      console.log('No pending task to miss');
       return;
     }
     
@@ -189,25 +165,10 @@ export const useAppState = () => {
     
     const newPetState = missTask(state.petState);
     
-    // Move to next pending task after missing
-    const sortedTasks = [...updatedTasks]
-      .filter(t => t.dayKey === todayKey)
-      .sort((a, b) => {
-        const aIsPending = !a.isDone && !a.isSkipped && !a.isMissed;
-        const bIsPending = !b.isDone && !b.isSkipped && !b.isMissed;
-        if (aIsPending && !bIsPending) return -1;
-        if (!aIsPending && bIsPending) return 1;
-        return 0;
-      });
-    
-    const nextPendingIndex = sortedTasks.findIndex(t => !t.isDone && !t.isSkipped && !t.isMissed);
-    const newIndex = nextPendingIndex >= 0 ? nextPendingIndex : 0;
-    
     await updateState({
       ...state,
       tasks: updatedTasks,
       petState: newPetState,
-      currentTaskIndex: newIndex,
     });
     
     await requestWidgetReload();
@@ -287,7 +248,7 @@ export const useAppState = () => {
     await requestWidgetReload();
   }, [state, updateState]);
 
-  const addTaskTemplate = useCallback(async (template: Omit<TaskTemplate, 'id'>) => {
+  const addTaskTemplate = useCallback(async (template: Omit<TaskTemplate, 'id'>, targetDate?: string) => {
     if (!state) return;
 
     const newTemplate: TaskTemplate = {
@@ -297,20 +258,20 @@ export const useAppState = () => {
 
     const updatedTemplates = [...(state.taskTemplates || []), newTemplate];
 
-    // Generate tasks for today from the new template
-    const todayKey = getTodayKey();
-    const dayOfWeek = new Date(todayKey).getDay();
+    // Generate tasks for the target date (or today if not specified)
+    const taskDate = targetDate || getTodayKey();
+    const dayOfWeek = new Date(taskDate).getDay();
     
     let newTasks = [...state.tasks];
     
-    // Only add task if it's not recurring or if today is one of the selected days
+    // Only add task if it's not recurring or if the target date is one of the selected days
     if (!template.isRecurring || template.recurringDays.includes(dayOfWeek)) {
       const newTask = {
-        id: `${todayKey}-${newTemplate.id}`,
+        id: `${taskDate}-${newTemplate.id}`,
         title: template.title,
         description: template.description,
         dueHour: template.dueHour,
-        dayKey: todayKey,
+        dayKey: taskDate,
         isDone: false,
         isSkipped: false,
         isMissed: false,

@@ -60,7 +60,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   };
 
   const getStatusColor = () => {
-    if (task.isDone) return '#4CAF50'; // Green for completed
+    if (task.isDone) return '#4CAF50';
     if (task.isSkipped) return '#FF9800';
     if (task.isMissed) return '#F44336';
     return isDark ? colors.dark.text : colors.light.text;
@@ -68,7 +68,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
 
   const getCardBackgroundColor = () => {
     if (task.isDone) {
-      return isDark ? '#1b3a1b' : '#e8f5e9'; // Green tint for completed
+      return isDark ? '#1b3a1b' : '#e8f5e9';
     }
     return isDark ? colors.dark.card : colors.light.card;
   };
@@ -168,28 +168,21 @@ const TaskCard: React.FC<TaskCardProps> = ({
 
       {/* Action buttons */}
       <View style={styles.actions}>
-        {/* Previous button */}
-        <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: isDark ? '#444' : '#e0e0e0' }]}
-          onPress={onPrev}
-        >
-          <IconSymbol name="chevron.left" size={24} color={isDark ? colors.dark.text : colors.light.text} />
-        </TouchableOpacity>
-
         {/* Complete button - ALWAYS GREEN */}
         <TouchableOpacity
           style={[
             styles.actionButton,
             styles.primaryButton,
             { 
-              backgroundColor: '#4CAF50', // Always green
-              opacity: task.isDone ? 0.6 : 1, // Slightly dimmed when already completed
+              backgroundColor: '#4CAF50',
+              opacity: task.isDone ? 0.6 : 1,
             },
           ]}
           onPress={onComplete}
           disabled={task.isDone}
         >
           <IconSymbol name="checkmark" size={28} color="#fff" />
+          <Text style={styles.buttonLabel}>Complete</Text>
         </TouchableOpacity>
 
         {/* Miss button */}
@@ -211,6 +204,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
           disabled={task.isMissed}
         >
           <IconSymbol name="xmark" size={28} color={task.isMissed ? '#fff' : '#F44336'} />
+          <Text style={[styles.buttonLabel, { color: task.isMissed ? '#fff' : '#F44336' }]}>Miss</Text>
         </TouchableOpacity>
 
         {/* Skip button */}
@@ -223,14 +217,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
           disabled={task.isSkipped}
         >
           <IconSymbol name="arrow.right" size={28} color={task.isSkipped ? '#fff' : '#FF9800'} />
-        </TouchableOpacity>
-
-        {/* Next button */}
-        <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: isDark ? '#444' : '#e0e0e0' }]}
-          onPress={onNext}
-        >
-          <IconSymbol name="chevron.right" size={24} color={isDark ? colors.dark.text : colors.light.text} />
+          <Text style={[styles.buttonLabel, { color: task.isSkipped ? '#fff' : '#FF9800' }]}>Skip</Text>
         </TouchableOpacity>
       </View>
     </Animated.View>
@@ -326,10 +313,16 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 50,
+    minHeight: 60,
   },
   primaryButton: {
-    flex: 1.5,
+    flex: 1.2,
+  },
+  buttonLabel: {
+    marginTop: spacing.xs,
+    fontSize: typography.bodySmall.fontSize,
+    fontWeight: '600',
+    color: '#fff',
   },
 });
 

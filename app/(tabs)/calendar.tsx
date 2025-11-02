@@ -28,9 +28,11 @@ const CalendarScreen = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [isAnytime, setIsAnytime] = useState(false);
-  const [dueHour, setDueHour] = useState(9);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedTime, setSelectedTime] = useState(new Date());
   const [isRecurring, setIsRecurring] = useState(false);
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
 
   const handleAddTask = () => {
@@ -44,24 +46,32 @@ const CalendarScreen = () => {
       return;
     }
 
-    addTaskTemplate({
-      title: title.trim(),
-      description: description.trim(),
-      dueHour: isAnytime ? -1 : dueHour,
-      isAnytime,
-      isRecurring,
-      recurringDays: isRecurring ? selectedDays : [0, 1, 2, 3, 4, 5, 6], // All days if not recurring
-    });
+    // Format the target date as YYYY-MM-DD
+    const targetDate = selectedDate.toISOString().split('T')[0];
+    const dueHour = isAnytime ? -1 : selectedTime.getHours();
+
+    addTaskTemplate(
+      {
+        title: title.trim(),
+        description: description.trim(),
+        dueHour,
+        isAnytime,
+        isRecurring,
+        recurringDays: isRecurring ? selectedDays : [0, 1, 2, 3, 4, 5, 6],
+      },
+      targetDate
+    );
 
     // Reset form
     setTitle('');
     setDescription('');
     setIsAnytime(false);
-    setDueHour(9);
+    setSelectedDate(new Date());
+    setSelectedTime(new Date());
     setIsRecurring(false);
     setSelectedDays([]);
 
-    Alert.alert('Success', 'Task template added successfully!');
+    Alert.alert('Success', 'Task added successfully!');
   };
 
   const toggleDay = (dayIndex: number) => {
@@ -72,11 +82,27 @@ const CalendarScreen = () => {
     }
   };
 
-  const onTimeChange = (event: any, selectedDate?: Date) => {
-    setShowTimePicker(Platform.OS === 'ios');
-    if (selectedDate) {
-      setDueHour(selectedDate.getHours());
+  const onDateChange = (event: any, date?: Date) => {
+    setShowDatePicker(Platform.OS === 'ios');
+    if (date) {
+      setSelectedDate(date);
     }
+  };
+
+  const onTimeChange = (event: any, time?: Date) => {
+    setShowTimePicker(Platform.OS === 'ios');
+    if (time) {
+      setSelectedTime(time);
+    }
+  };
+
+  const formatDate = (date: Date) => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+  };
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
   };
 
   const handleDeleteTemplate = (templateId: string) => {
@@ -147,6 +173,38 @@ const CalendarScreen = () => {
             />
           </View>
 
+          {/* Date Selection */}
+          <View style={styles.inputContainer}>
+            <Text style={[styles.label, { color: isDark ? colors.textDark : colors.textLight }]}>
+              Date *
+            </Text>
+            <TouchableOpacity
+              style={[
+                styles.dateButton,
+                {
+                  backgroundColor: isDark ? colors.dark.card : colors.light.card,
+                  borderColor: isDark ? '#444' : '#ddd',
+                },
+              ]}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <IconSymbol name="calendar" size={24} color={isDark ? colors.textDark : colors.textLight} />
+              <Text style={[styles.dateText, { color: isDark ? colors.textDark : colors.textLight }]}>
+                {formatDate(selectedDate)}
+              </Text>
+            </TouchableOpacity>
+
+            {showDatePicker && (
+              <DateTimePicker
+                value={selectedDate}
+                mode="date"
+                display="default"
+                onChange={onDateChange}
+                minimumDate={new Date()}
+              />
+            )}
+          </View>
+
           {/* Time Selection */}
           <View style={styles.inputContainer}>
             <Text style={[styles.label, { color: isDark ? colors.textDark : colors.textLight }]}>
@@ -192,16 +250,16 @@ const CalendarScreen = () => {
               >
                 <IconSymbol name="clock" size={24} color={isDark ? colors.textDark : colors.textLight} />
                 <Text style={[styles.timeText, { color: isDark ? colors.textDark : colors.textLight }]}>
-                  {dueHour.toString().padStart(2, '0')}:00
+                  {formatTime(selectedTime)}
                 </Text>
               </TouchableOpacity>
             )}
 
             {showTimePicker && (
               <DateTimePicker
-                value={new Date(2024, 0, 1, dueHour, 0)}
+                value={selectedTime}
                 mode="time"
-                is24Hour={true}
+                is24Hour={false}
                 display="default"
                 onChange={onTimeChange}
               />
@@ -376,6 +434,18 @@ const styles = StyleSheet.create({
     minHeight: 80,
     textAlignVertical: 'top',
   },
+  dateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.md,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    gap: spacing.sm,
+  },
+  dateText: {
+    fontSize: typography.md,
+    fontWeight: '600',
+  },
   toggleButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -398,7 +468,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   timeText: {
-    fontSize: typography.lg,
+    fontSize: typography.md,
     fontWeight: '600',
   },
   daysContainer: {
