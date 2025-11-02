@@ -8,6 +8,9 @@ export interface Task {
   isSkipped: boolean;
   isMissed: boolean;
   isAnytime: boolean; // true if task can be done anytime during the day
+  isRecurring?: boolean; // true if task repeats
+  recurringDays?: number[]; // 0-6 (Sunday-Saturday) for recurring tasks
+  templateId?: string; // ID of the template task for recurring tasks
 }
 
 export interface PetState {
@@ -26,6 +29,7 @@ export interface AppState {
   settings: Settings;
   currentTaskIndex: number;
   lastRolloverDate: string; // YYYY-MM-DD
+  taskTemplates: TaskTemplate[]; // Templates for recurring tasks
 }
 
 export interface PetStage {
@@ -34,4 +38,13 @@ export interface PetStage {
   minXP: number;
   image: string;
   color: string;
+}
+
+export interface TaskTemplate {
+  id: string;
+  title: string;
+  dueHour: number; // 0-23, or -1 for anytime
+  isAnytime: boolean;
+  isRecurring: boolean;
+  recurringDays: number[]; // 0-6 (Sunday-Saturday)
 }

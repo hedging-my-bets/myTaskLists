@@ -11,6 +11,11 @@ const tabs: TabBarItem[] = [
     icon: 'house.fill',
   },
   {
+    route: '/(tabs)/calendar',
+    label: 'Calendar',
+    icon: 'calendar',
+  },
+  {
     route: '/(tabs)/settings',
     label: 'Settings',
     icon: 'gearshape.fill',
@@ -22,6 +27,7 @@ export default function TabLayout() {
     return (
       <Stack>
         <Stack.Screen name="(home)" options={{ headerShown: false }} />
+        <Stack.Screen name="calendar" options={{ title: 'Calendar' }} />
         <Stack.Screen name="settings" options={{ title: 'Settings' }} />
       </Stack>
     );
@@ -31,6 +37,7 @@ export default function TabLayout() {
     <>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(home)" />
+        <Stack.Screen name="calendar" />
         <Stack.Screen name="settings" />
       </Stack>
       <FloatingTabBar tabs={tabs} />

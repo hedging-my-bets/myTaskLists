@@ -49,10 +49,17 @@ const TaskCard: React.FC<TaskCardProps> = ({
   };
 
   const getStatusColor = () => {
-    if (task.isDone) return '#4CAF50';
+    if (task.isDone) return '#4CAF50'; // Green for completed
     if (task.isSkipped) return '#FF9800';
     if (task.isMissed) return '#F44336';
     return isDark ? colors.textDark : colors.textLight;
+  };
+
+  const getCardBackgroundColor = () => {
+    if (task.isDone) {
+      return isDark ? '#1b3a1b' : '#e8f5e9'; // Green tint for completed
+    }
+    return isDark ? colors.cardDark : colors.cardLight;
   };
 
   return (
@@ -60,7 +67,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
       entering={SlideInRight.duration(300)}
       style={[
         styles.container,
-        { backgroundColor: isDark ? colors.cardDark : colors.cardLight },
+        { backgroundColor: getCardBackgroundColor() },
       ]}
     >
       {/* Header with task number and hour */}
@@ -109,7 +116,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
       <View style={styles.statusContainer}>
         <IconSymbol name={getStatusIcon()} size={24} color={getStatusColor()} />
         <Text style={[styles.statusText, { color: getStatusColor() }]}>
-          {task.isDone && 'Completed'}
+          {task.isDone && 'Completed ✓'}
           {task.isSkipped && 'Skipped'}
           {task.isMissed && 'Missed'}
           {!task.isDone && !task.isSkipped && !task.isMissed && 'Pending'}

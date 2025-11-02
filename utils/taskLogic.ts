@@ -1,6 +1,6 @@
 
-import { Task, AppState, Settings } from '@/types';
-import { getTodayKey, getCurrentHour, getDefaultTasks } from './storage';
+import { Task, AppState, Settings, TaskTemplate } from '@/types';
+import { getTodayKey, getCurrentHour, getDefaultTasks, generateTasksFromTemplates } from './storage';
 import { getActiveHour, isWithinGracePeriod } from './timeline';
 
 export const getNearestTaskIndex = (tasks: Task[], graceMinutes: number): number => {
@@ -87,8 +87,14 @@ export const performRollover = (state: AppState): AppState => {
     return t;
   });
   
-  // Create new tasks for today
-  const newTasks = getDefaultTasks(today);
+  // Create new tasks for today from templates
+  let newTasks: Task[] = [];
+  if (state.taskTemplates && state.taskTemplates.length > 0) {
+    newTasks = generateTasksFromTemplates(state.taskTemplates, today);
+  } else {
+    // Fallback to default tasks if no templates
+    newTasks = getDefaultTasks(today);
+  }
   
   // Apply XP penalty using the new level-scaled penalty
   const { penalizeMissedTasks } = require('./petLogic');

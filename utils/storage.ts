@@ -1,6 +1,6 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AppState, Task, PetState, Settings } from '@/types';
+import { AppState, Task, PetState, Settings, TaskTemplate } from '@/types';
 
 const STORAGE_KEY = '@PetProgress:appState';
 
@@ -12,6 +12,36 @@ const DEFAULT_SETTINGS: Settings = {
 const DEFAULT_PET_STATE: PetState = {
   xp: 0,
   stageIndex: 0,
+};
+
+export const generateTasksFromTemplates = (templates: TaskTemplate[], dayKey: string): Task[] => {
+  const tasks: Task[] = [];
+  const dayOfWeek = new Date(dayKey).getDay();
+
+  templates.forEach((template) => {
+    // For recurring tasks, only create if today is one of the selected days
+    if (template.isRecurring) {
+      if (!template.recurringDays.includes(dayOfWeek)) {
+        return; // Skip this template for today
+      }
+    }
+
+    tasks.push({
+      id: `${dayKey}-${template.id}`,
+      title: template.title,
+      dueHour: template.dueHour,
+      dayKey,
+      isDone: false,
+      isSkipped: false,
+      isMissed: false,
+      isAnytime: template.isAnytime,
+      isRecurring: template.isRecurring,
+      recurringDays: template.recurringDays,
+      templateId: template.id,
+    });
+  });
+
+  return tasks;
 };
 
 export const getDefaultTasks = (dayKey: string): Task[] => {
@@ -71,6 +101,12 @@ export const loadAppState = async (): Promise<AppState> => {
     if (stored) {
       const parsed = JSON.parse(stored) as AppState;
       console.log('Loaded app state:', parsed);
+      
+      // Ensure taskTemplates exists
+      if (!parsed.taskTemplates) {
+        parsed.taskTemplates = [];
+      }
+      
       return parsed;
     }
   } catch (error) {
@@ -84,6 +120,7 @@ export const loadAppState = async (): Promise<AppState> => {
     settings: DEFAULT_SETTINGS,
     currentTaskIndex: 0,
     lastRolloverDate: today,
+    taskTemplates: [],
   };
   
   await saveAppState(defaultState);

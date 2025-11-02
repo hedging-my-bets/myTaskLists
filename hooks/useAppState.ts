@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { AppState } from '@/types';
-import { loadAppState, saveAppState, getTodayKey } from '@/utils/storage';
+import { AppState, TaskTemplate } from '@/types';
+import { loadAppState, saveAppState, getTodayKey, generateTasksFromTemplates } from '@/utils/storage';
 import { shouldRollover, performRollover, getNearestTaskIndex, updateTaskTitle } from '@/utils/taskLogic';
 import { completeTask, missTask } from '@/utils/petLogic';
 import { syncWidgetState, requestWidgetReload } from '@/shared/WidgetStateStore';
@@ -99,7 +99,7 @@ export const useAppState = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     
     const updatedTasks = state.tasks.map(t => 
-      t.id === currentTask.id ? { ...t, isDone: true } : t
+      t.id === currentTask.id ? { ...t, isDone: true, isSkipped: false, isMissed: false } : t
     );
     
     const newPetState = completeTask(state.petState);
@@ -128,7 +128,7 @@ export const useAppState = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     
     const updatedTasks = state.tasks.map(t => 
-      t.id === currentTask.id ? { ...t, isSkipped: true } : t
+      t.id === currentTask.id ? { ...t, isSkipped: true, isDone: false, isMissed: false } : t
     );
     
     await updateState({
@@ -154,7 +154,7 @@ export const useAppState = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     
     const updatedTasks = state.tasks.map(t => 
-      t.id === currentTask.id ? { ...t, isMissed: true } : t
+      t.id === currentTask.id ? { ...t, isMissed: true, isDone: false, isSkipped: false } : t
     );
     
     const newPetState = missTask(state.petState);
@@ -229,6 +229,66 @@ export const useAppState = () => {
     await requestWidgetReload();
   }, [state, updateState]);
 
+  const addTaskTemplate = useCallback(async (template: Omit<TaskTemplate, 'id'>) => {
+    if (!state) return;
+
+    const newTemplate: TaskTemplate = {
+      ...template,
+      id: `template-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    };
+
+    const updatedTemplates = [...(state.taskTemplates || []), newTemplate];
+
+    // Generate tasks for today from the new template
+    const todayKey = getTodayKey();
+    const dayOfWeek = new Date(todayKey).getDay();
+    
+    let newTasks = [...state.tasks];
+    
+    // Only add task if it's not recurring or if today is one of the selected days
+    if (!template.isRecurring || template.recurringDays.includes(dayOfWeek)) {
+      const newTask = {
+        id: `${todayKey}-${newTemplate.id}`,
+        title: template.title,
+        dueHour: template.dueHour,
+        dayKey: todayKey,
+        isDone: false,
+        isSkipped: false,
+        isMissed: false,
+        isAnytime: template.isAnytime,
+        isRecurring: template.isRecurring,
+        recurringDays: template.recurringDays,
+        templateId: newTemplate.id,
+      };
+      newTasks.push(newTask);
+    }
+
+    await updateState({
+      ...state,
+      taskTemplates: updatedTemplates,
+      tasks: newTasks,
+    });
+
+    await requestWidgetReload();
+  }, [state, updateState]);
+
+  const deleteTaskTemplate = useCallback(async (templateId: string) => {
+    if (!state) return;
+
+    const updatedTemplates = state.taskTemplates.filter(t => t.id !== templateId);
+
+    // Remove all tasks associated with this template
+    const updatedTasks = state.tasks.filter(t => t.templateId !== templateId);
+
+    await updateState({
+      ...state,
+      taskTemplates: updatedTemplates,
+      tasks: updatedTasks,
+    });
+
+    await requestWidgetReload();
+  }, [state, updateState]);
+
   return {
     state,
     loading,
@@ -239,6 +299,8 @@ export const useAppState = () => {
     prevTask,
     updateGraceMinutes,
     editTaskTitle,
+    addTaskTemplate,
+    deleteTaskTemplate,
     refreshState: loadState,
   };
 };
