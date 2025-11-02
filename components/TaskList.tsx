@@ -1,8 +1,9 @@
 
-import { View, Text, StyleSheet, ScrollView, useColorScheme } from 'react-native';
-import { Task } from '@/types';
 import React from 'react';
+import { View, Text, StyleSheet, ScrollView, useColorScheme } from 'react-native';
 import { colors, spacing, borderRadius, typography } from '@/styles/commonStyles';
+import { Task } from '@/types';
+import Animated, { FadeInDown, Layout } from 'react-native-reanimated';
 
 interface TaskListProps {
   tasks: Task[];
@@ -21,148 +22,123 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, currentTaskId }) => {
   };
 
   const getStatusColor = (task: Task) => {
-    if (task.isDone) return '#4CAF50'; // Green for completed
+    if (task.isDone) return '#4CAF50';
     if (task.isSkipped) return '#FF9800';
     if (task.isMissed) return '#F44336';
-    return isDark ? colors.textSecondaryDark : colors.textSecondaryLight;
+    return isDark ? colors.dark.textSecondary : colors.light.textSecondary;
   };
 
   const getTaskBackgroundColor = (task: Task) => {
     if (task.id === currentTaskId) {
-      return isDark ? colors.primaryDark : colors.primaryLight;
+      return isDark ? colors.dark.primary + '20' : colors.light.primary + '20';
     }
     if (task.isDone) {
-      return isDark ? '#1b3a1b' : '#e8f5e9'; // Green tint for completed
+      return isDark ? '#1b3a1b' : '#e8f5e9';
     }
-    return isDark ? '#2a2a2a' : '#f5f5f5';
+    return isDark ? colors.dark.card : colors.light.card;
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={[styles.title, { color: isDark ? colors.textDark : colors.textLight }]}>
-        Today&apos;s Tasks
-      </Text>
-      <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
-        {tasks.map((task) => (
-          <View
-            key={task.id}
-            style={[
-              styles.taskItem,
-              {
-                backgroundColor: getTaskBackgroundColor(task),
-              },
-            ]}
-          >
-            <View style={styles.taskInfo}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      {tasks.map((task, index) => (
+        <Animated.View
+          key={task.id}
+          entering={FadeInDown.delay(index * 50).duration(300)}
+          layout={Layout.springify().damping(15).stiffness(100)}
+          style={[
+            styles.taskItem,
+            {
+              backgroundColor: getTaskBackgroundColor(task),
+              borderLeftWidth: task.id === currentTaskId ? 4 : 0,
+              borderLeftColor: isDark ? colors.dark.primary : colors.light.primary,
+            },
+          ]}
+        >
+          <View style={styles.taskHeader}>
+            <Text
+              style={[
+                styles.statusIcon,
+                { color: getStatusColor(task) },
+              ]}
+            >
+              {getStatusIcon(task)}
+            </Text>
+            <View style={styles.taskContent}>
               <Text
                 style={[
-                  styles.statusIcon,
-                  { color: getStatusColor(task) },
+                  styles.taskTitle,
+                  { color: isDark ? colors.dark.text : colors.light.text },
+                  (task.isDone || task.isSkipped || task.isMissed) && styles.completedText,
                 ]}
               >
-                {getStatusIcon(task)}
+                {task.title}
               </Text>
-              <View style={styles.taskDetails}>
+              {task.description && (
                 <Text
                   style={[
-                    styles.taskTitle,
-                    {
-                      color: task.id === currentTaskId
-                        ? '#fff'
-                        : isDark
-                        ? colors.textDark
-                        : colors.textLight,
-                    },
-                    task.isDone && styles.completedText,
+                    styles.taskDescription,
+                    { color: isDark ? colors.dark.textSecondary : colors.light.textSecondary },
                   ]}
-                  numberOfLines={1}
+                  numberOfLines={2}
                 >
-                  {task.title}
+                  {task.description}
                 </Text>
-                {!task.isAnytime && (
-                  <Text
-                    style={[
-                      styles.taskTime,
-                      {
-                        color: task.id === currentTaskId
-                          ? 'rgba(255, 255, 255, 0.8)'
-                          : isDark
-                          ? colors.textSecondaryDark
-                          : colors.textSecondaryLight,
-                      },
-                    ]}
-                  >
-                    {task.dueHour}:00
-                  </Text>
-                )}
-                {task.isAnytime && (
-                  <Text
-                    style={[
-                      styles.taskTime,
-                      {
-                        color: task.id === currentTaskId
-                          ? 'rgba(255, 255, 255, 0.8)'
-                          : isDark
-                          ? colors.textSecondaryDark
-                          : colors.textSecondaryLight,
-                      },
-                    ]}
-                  >
-                    Anytime
-                  </Text>
-                )}
-              </View>
+              )}
             </View>
+            {!task.isAnytime && (
+              <Text
+                style={[
+                  styles.taskTime,
+                  { color: isDark ? colors.dark.textSecondary : colors.light.textSecondary },
+                ]}
+              >
+                {task.dueHour}:00
+              </Text>
+            )}
           </View>
-        ))}
-      </ScrollView>
-    </View>
+        </Animated.View>
+      ))}
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: spacing.lg,
-  },
-  title: {
-    fontSize: typography.lg,
-    fontWeight: '700',
-    marginBottom: spacing.md,
-    paddingHorizontal: spacing.md,
-  },
-  list: {
-    maxHeight: 300,
+    flex: 1,
   },
   taskItem: {
     padding: spacing.md,
-    marginHorizontal: spacing.md,
-    marginBottom: spacing.sm,
     borderRadius: borderRadius.md,
+    marginBottom: spacing.sm,
   },
-  taskInfo: {
+  taskHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
   },
   statusIcon: {
-    fontSize: typography.lg,
+    fontSize: 20,
     fontWeight: '700',
-    marginRight: spacing.sm,
-    width: 24,
-    textAlign: 'center',
+    marginTop: 2,
   },
-  taskDetails: {
+  taskContent: {
     flex: 1,
   },
   taskTitle: {
     fontSize: typography.md,
     fontWeight: '600',
-    marginBottom: 2,
+    marginBottom: spacing.xs,
+  },
+  taskDescription: {
+    fontSize: typography.sm,
+    lineHeight: 18,
   },
   completedText: {
-    opacity: 0.8,
+    opacity: 0.6,
   },
   taskTime: {
     fontSize: typography.sm,
+    fontWeight: '500',
   },
 });
 

@@ -114,6 +114,10 @@ export const updateTaskTitle = (tasks: Task[], taskId: string, newTitle: string)
   return tasks.map(t => t.id === taskId ? { ...t, title: newTitle } : t);
 };
 
+export const updateTaskDescription = (tasks: Task[], taskId: string, newDescription: string): Task[] => {
+  return tasks.map(t => t.id === taskId ? { ...t, description: newDescription } : t);
+};
+
 export const getSortedTasks = (tasks: Task[]): Task[] => {
   // Sort tasks: time-specific tasks first (by hour), then anytime tasks
   return [...tasks].sort((a, b) => {

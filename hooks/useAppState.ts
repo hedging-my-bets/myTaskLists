@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { AppState, TaskTemplate } from '@/types';
 import { loadAppState, saveAppState, getTodayKey, generateTasksFromTemplates } from '@/utils/storage';
-import { shouldRollover, performRollover, getNearestTaskIndex, updateTaskTitle } from '@/utils/taskLogic';
+import { shouldRollover, performRollover, getNearestTaskIndex, updateTaskTitle, updateTaskDescription } from '@/utils/taskLogic';
 import { completeTask, missTask } from '@/utils/petLogic';
 import { syncWidgetState, requestWidgetReload } from '@/shared/WidgetStateStore';
 import * as Haptics from 'expo-haptics';
@@ -104,10 +104,25 @@ export const useAppState = () => {
     
     const newPetState = completeTask(state.petState);
     
+    // Move to next pending task after completion
+    const sortedTasks = [...updatedTasks]
+      .filter(t => t.dayKey === todayKey)
+      .sort((a, b) => {
+        const aIsPending = !a.isDone && !a.isSkipped && !a.isMissed;
+        const bIsPending = !b.isDone && !b.isSkipped && !b.isMissed;
+        if (aIsPending && !bIsPending) return -1;
+        if (!aIsPending && bIsPending) return 1;
+        return 0;
+      });
+    
+    const nextPendingIndex = sortedTasks.findIndex(t => !t.isDone && !t.isSkipped && !t.isMissed);
+    const newIndex = nextPendingIndex >= 0 ? nextPendingIndex : 0;
+    
     await updateState({
       ...state,
       tasks: updatedTasks,
       petState: newPetState,
+      currentTaskIndex: newIndex,
     });
     
     await requestWidgetReload();
@@ -131,9 +146,24 @@ export const useAppState = () => {
       t.id === currentTask.id ? { ...t, isSkipped: true, isDone: false, isMissed: false } : t
     );
     
+    // Move to next pending task after skipping
+    const sortedTasks = [...updatedTasks]
+      .filter(t => t.dayKey === todayKey)
+      .sort((a, b) => {
+        const aIsPending = !a.isDone && !a.isSkipped && !a.isMissed;
+        const bIsPending = !b.isDone && !b.isSkipped && !b.isMissed;
+        if (aIsPending && !bIsPending) return -1;
+        if (!aIsPending && bIsPending) return 1;
+        return 0;
+      });
+    
+    const nextPendingIndex = sortedTasks.findIndex(t => !t.isDone && !t.isSkipped && !t.isMissed);
+    const newIndex = nextPendingIndex >= 0 ? nextPendingIndex : 0;
+    
     await updateState({
       ...state,
       tasks: updatedTasks,
+      currentTaskIndex: newIndex,
     });
     
     await requestWidgetReload();
@@ -159,10 +189,25 @@ export const useAppState = () => {
     
     const newPetState = missTask(state.petState);
     
+    // Move to next pending task after missing
+    const sortedTasks = [...updatedTasks]
+      .filter(t => t.dayKey === todayKey)
+      .sort((a, b) => {
+        const aIsPending = !a.isDone && !a.isSkipped && !a.isMissed;
+        const bIsPending = !b.isDone && !b.isSkipped && !b.isMissed;
+        if (aIsPending && !bIsPending) return -1;
+        if (!aIsPending && bIsPending) return 1;
+        return 0;
+      });
+    
+    const nextPendingIndex = sortedTasks.findIndex(t => !t.isDone && !t.isSkipped && !t.isMissed);
+    const newIndex = nextPendingIndex >= 0 ? nextPendingIndex : 0;
+    
     await updateState({
       ...state,
       tasks: updatedTasks,
       petState: newPetState,
+      currentTaskIndex: newIndex,
     });
     
     await requestWidgetReload();
@@ -229,6 +274,19 @@ export const useAppState = () => {
     await requestWidgetReload();
   }, [state, updateState]);
 
+  const editTaskDescription = useCallback(async (taskId: string, newDescription: string) => {
+    if (!state) return;
+    
+    const updatedTasks = updateTaskDescription(state.tasks, taskId, newDescription);
+    
+    await updateState({
+      ...state,
+      tasks: updatedTasks,
+    });
+    
+    await requestWidgetReload();
+  }, [state, updateState]);
+
   const addTaskTemplate = useCallback(async (template: Omit<TaskTemplate, 'id'>) => {
     if (!state) return;
 
@@ -250,6 +308,7 @@ export const useAppState = () => {
       const newTask = {
         id: `${todayKey}-${newTemplate.id}`,
         title: template.title,
+        description: template.description,
         dueHour: template.dueHour,
         dayKey: todayKey,
         isDone: false,
@@ -299,6 +358,7 @@ export const useAppState = () => {
     prevTask,
     updateGraceMinutes,
     editTaskTitle,
+    editTaskDescription,
     addTaskTemplate,
     deleteTaskTemplate,
     refreshState: loadState,

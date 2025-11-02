@@ -2,6 +2,7 @@
 export interface Task {
   id: string;
   title: string;
+  description?: string; // Add description field
   dueHour: number; // 0-23, or -1 for anytime tasks
   dayKey: string; // YYYY-MM-DD
   isDone: boolean;
@@ -43,6 +44,7 @@ export interface PetStage {
 export interface TaskTemplate {
   id: string;
   title: string;
+  description?: string; // Add description field
   dueHour: number; // 0-23, or -1 for anytime
   isAnytime: boolean;
   isRecurring: boolean;

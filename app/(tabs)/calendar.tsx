@@ -12,29 +12,29 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, spacing, borderRadius, typography } from '@/styles/commonStyles';
 import { IconSymbol } from '@/components/IconSymbol';
-import { useAppState } from '@/hooks/useAppState';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Animated, { FadeIn, SlideInRight } from 'react-native-reanimated';
+import { colors, spacing, borderRadius, typography } from '@/styles/commonStyles';
+import { useAppState } from '@/hooks/useAppState';
 
 const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-export default function CalendarScreen() {
+const CalendarScreen = () => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const { state, addTaskTemplate, deleteTaskTemplate } = useAppState();
 
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [taskTitle, setTaskTitle] = useState('');
-  const [isAnytime, setIsAnytime] = useState(true);
-  const [selectedHour, setSelectedHour] = useState(9);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [isAnytime, setIsAnytime] = useState(false);
+  const [dueHour, setDueHour] = useState(9);
   const [isRecurring, setIsRecurring] = useState(false);
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
   const [showTimePicker, setShowTimePicker] = useState(false);
 
   const handleAddTask = () => {
-    if (!taskTitle.trim()) {
+    if (!title.trim()) {
       Alert.alert('Error', 'Please enter a task title');
       return;
     }
@@ -45,22 +45,23 @@ export default function CalendarScreen() {
     }
 
     addTaskTemplate({
-      title: taskTitle.trim(),
-      dueHour: isAnytime ? -1 : selectedHour,
+      title: title.trim(),
+      description: description.trim(),
+      dueHour: isAnytime ? -1 : dueHour,
       isAnytime,
       isRecurring,
-      recurringDays: isRecurring ? selectedDays : [],
+      recurringDays: isRecurring ? selectedDays : [0, 1, 2, 3, 4, 5, 6], // All days if not recurring
     });
 
     // Reset form
-    setTaskTitle('');
-    setIsAnytime(true);
-    setSelectedHour(9);
+    setTitle('');
+    setDescription('');
+    setIsAnytime(false);
+    setDueHour(9);
     setIsRecurring(false);
     setSelectedDays([]);
-    setShowAddForm(false);
 
-    Alert.alert('Success', 'Task template created!');
+    Alert.alert('Success', 'Task template added successfully!');
   };
 
   const toggleDay = (dayIndex: number) => {
@@ -71,10 +72,17 @@ export default function CalendarScreen() {
     }
   };
 
+  const onTimeChange = (event: any, selectedDate?: Date) => {
+    setShowTimePicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      setDueHour(selectedDate.getHours());
+    }
+  };
+
   const handleDeleteTemplate = (templateId: string) => {
     Alert.alert(
-      'Delete Task Template',
-      'Are you sure you want to delete this task template?',
+      'Delete Template',
+      'Are you sure you want to delete this task template? This will remove all associated tasks.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -86,450 +94,346 @@ export default function CalendarScreen() {
     );
   };
 
-  const onTimeChange = (event: any, selectedDate?: Date) => {
-    setShowTimePicker(Platform.OS === 'ios');
-    if (selectedDate) {
-      setSelectedHour(selectedDate.getHours());
-    }
-  };
-
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: isDark ? colors.backgroundDark : colors.backgroundLight }]}
-      edges={['top']}
-    >
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        {/* Header */}
-        <View style={styles.header}>
+    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? colors.backgroundDark : colors.backgroundLight }]}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Animated.View entering={FadeIn.duration(400)}>
           <Text style={[styles.title, { color: isDark ? colors.textDark : colors.textLight }]}>
-            Task Templates
+            Add New Task
           </Text>
-          <Text style={[styles.subtitle, { color: isDark ? colors.textSecondaryDark : colors.textSecondaryLight }]}>
-            Create and manage your daily tasks
-          </Text>
-        </View>
 
-        {/* Add Task Button */}
-        {!showAddForm && (
-          <TouchableOpacity
-            style={[styles.addButton, { backgroundColor: isDark ? colors.primaryDark : colors.primaryLight }]}
-            onPress={() => setShowAddForm(true)}
-          >
-            <IconSymbol name="plus.circle.fill" size={24} color="#fff" />
-            <Text style={styles.addButtonText}>Add New Task</Text>
-          </TouchableOpacity>
-        )}
-
-        {/* Add Task Form */}
-        {showAddForm && (
-          <Animated.View
-            entering={FadeIn.duration(300)}
-            style={[styles.formCard, { backgroundColor: isDark ? colors.cardDark : colors.cardLight }]}
-          >
-            <View style={styles.formHeader}>
-              <Text style={[styles.formTitle, { color: isDark ? colors.textDark : colors.textLight }]}>
-                New Task Template
-              </Text>
-              <TouchableOpacity onPress={() => setShowAddForm(false)}>
-                <IconSymbol name="xmark.circle.fill" size={28} color={isDark ? colors.textDark : colors.textLight} />
-              </TouchableOpacity>
-            </View>
-
-            {/* Task Title */}
-            <Text style={[styles.label, { color: isDark ? colors.textDark : colors.textLight }]}>Task Title</Text>
+          {/* Task Title */}
+          <View style={styles.inputContainer}>
+            <Text style={[styles.label, { color: isDark ? colors.textDark : colors.textLight }]}>
+              Task Title *
+            </Text>
             <TextInput
               style={[
                 styles.input,
                 {
                   color: isDark ? colors.textDark : colors.textLight,
-                  backgroundColor: isDark ? '#333' : '#f5f5f5',
-                  borderColor: isDark ? '#555' : '#ddd',
+                  backgroundColor: isDark ? colors.dark.card : colors.light.card,
+                  borderColor: isDark ? '#444' : '#ddd',
                 },
               ]}
-              value={taskTitle}
-              onChangeText={setTaskTitle}
-              placeholder="Enter task title..."
-              placeholderTextColor={isDark ? '#888' : '#999'}
+              value={title}
+              onChangeText={setTitle}
+              placeholder="Enter task title"
+              placeholderTextColor={isDark ? '#666' : '#999'}
             />
+          </View>
 
-            {/* Timeframe Toggle */}
-            <Text style={[styles.label, { color: isDark ? colors.textDark : colors.textLight }]}>Timeframe</Text>
-            <View style={styles.toggleContainer}>
-              <TouchableOpacity
-                style={[
-                  styles.toggleButton,
-                  isAnytime && { backgroundColor: isDark ? colors.primaryDark : colors.primaryLight },
-                  !isAnytime && { backgroundColor: isDark ? '#333' : '#f5f5f5' },
-                ]}
-                onPress={() => setIsAnytime(true)}
-              >
-                <Text style={[styles.toggleText, { color: isAnytime ? '#fff' : (isDark ? colors.textDark : colors.textLight) }]}>
-                  Anytime
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.toggleButton,
-                  !isAnytime && { backgroundColor: isDark ? colors.primaryDark : colors.primaryLight },
-                  isAnytime && { backgroundColor: isDark ? '#333' : '#f5f5f5' },
-                ]}
-                onPress={() => setIsAnytime(false)}
-              >
-                <Text style={[styles.toggleText, { color: !isAnytime ? '#fff' : (isDark ? colors.textDark : colors.textLight) }]}>
-                  Specific Time
-                </Text>
-              </TouchableOpacity>
-            </View>
+          {/* Task Description */}
+          <View style={styles.inputContainer}>
+            <Text style={[styles.label, { color: isDark ? colors.textDark : colors.textLight }]}>
+              Description
+            </Text>
+            <TextInput
+              style={[
+                styles.input,
+                styles.textArea,
+                {
+                  color: isDark ? colors.textDark : colors.textLight,
+                  backgroundColor: isDark ? colors.dark.card : colors.light.card,
+                  borderColor: isDark ? '#444' : '#ddd',
+                },
+              ]}
+              value={description}
+              onChangeText={setDescription}
+              placeholder="Add a description (optional)"
+              placeholderTextColor={isDark ? '#666' : '#999'}
+              multiline
+              numberOfLines={3}
+            />
+          </View>
 
-            {/* Time Picker */}
+          {/* Time Selection */}
+          <View style={styles.inputContainer}>
+            <Text style={[styles.label, { color: isDark ? colors.textDark : colors.textLight }]}>
+              Time
+            </Text>
+            <TouchableOpacity
+              style={[
+                styles.toggleButton,
+                {
+                  backgroundColor: isAnytime
+                    ? (isDark ? colors.dark.primary : colors.light.primary)
+                    : (isDark ? colors.dark.card : colors.light.card),
+                  borderColor: isDark ? '#444' : '#ddd',
+                },
+              ]}
+              onPress={() => setIsAnytime(!isAnytime)}
+            >
+              <IconSymbol
+                name={isAnytime ? 'checkmark.circle.fill' : 'circle'}
+                size={24}
+                color={isAnytime ? '#fff' : (isDark ? colors.textDark : colors.textLight)}
+              />
+              <Text
+                style={[
+                  styles.toggleText,
+                  { color: isAnytime ? '#fff' : (isDark ? colors.textDark : colors.textLight) },
+                ]}
+              >
+                Anytime during the day
+              </Text>
+            </TouchableOpacity>
+
             {!isAnytime && (
-              <View style={styles.timePickerContainer}>
-                <TouchableOpacity
-                  style={[styles.timeButton, { backgroundColor: isDark ? '#333' : '#f5f5f5' }]}
-                  onPress={() => setShowTimePicker(true)}
-                >
-                  <IconSymbol name="clock.fill" size={20} color={isDark ? colors.primaryDark : colors.primaryLight} />
-                  <Text style={[styles.timeText, { color: isDark ? colors.textDark : colors.textLight }]}>
-                    {selectedHour.toString().padStart(2, '0')}:00
-                  </Text>
-                </TouchableOpacity>
-                {showTimePicker && (
-                  <DateTimePicker
-                    value={new Date(2024, 0, 1, selectedHour, 0)}
-                    mode="time"
-                    is24Hour={true}
-                    display="default"
-                    onChange={onTimeChange}
-                  />
-                )}
-              </View>
+              <TouchableOpacity
+                style={[
+                  styles.timeButton,
+                  {
+                    backgroundColor: isDark ? colors.dark.card : colors.light.card,
+                    borderColor: isDark ? '#444' : '#ddd',
+                  },
+                ]}
+                onPress={() => setShowTimePicker(true)}
+              >
+                <IconSymbol name="clock" size={24} color={isDark ? colors.textDark : colors.textLight} />
+                <Text style={[styles.timeText, { color: isDark ? colors.textDark : colors.textLight }]}>
+                  {dueHour.toString().padStart(2, '0')}:00
+                </Text>
+              </TouchableOpacity>
             )}
 
-            {/* Recurring Toggle */}
-            <View style={styles.recurringContainer}>
-              <Text style={[styles.label, { color: isDark ? colors.textDark : colors.textLight }]}>
-                Recurring Task
-              </Text>
-              <TouchableOpacity
-                style={[
-                  styles.switch,
-                  { backgroundColor: isRecurring ? (isDark ? colors.primaryDark : colors.primaryLight) : (isDark ? '#333' : '#ddd') },
-                ]}
-                onPress={() => setIsRecurring(!isRecurring)}
-              >
-                <View
-                  style={[
-                    styles.switchThumb,
-                    { transform: [{ translateX: isRecurring ? 22 : 2 }] },
-                  ]}
-                />
-              </TouchableOpacity>
-            </View>
+            {showTimePicker && (
+              <DateTimePicker
+                value={new Date(2024, 0, 1, dueHour, 0)}
+                mode="time"
+                is24Hour={true}
+                display="default"
+                onChange={onTimeChange}
+              />
+            )}
+          </View>
 
-            {/* Day Selection */}
-            {isRecurring && (
+          {/* Recurring Toggle */}
+          <View style={styles.inputContainer}>
+            <Text style={[styles.label, { color: isDark ? colors.textDark : colors.textLight }]}>
+              Recurring
+            </Text>
+            <TouchableOpacity
+              style={[
+                styles.toggleButton,
+                {
+                  backgroundColor: isRecurring
+                    ? (isDark ? colors.dark.primary : colors.light.primary)
+                    : (isDark ? colors.dark.card : colors.light.card),
+                  borderColor: isDark ? '#444' : '#ddd',
+                },
+              ]}
+              onPress={() => setIsRecurring(!isRecurring)}
+            >
+              <IconSymbol
+                name={isRecurring ? 'checkmark.circle.fill' : 'circle'}
+                size={24}
+                color={isRecurring ? '#fff' : (isDark ? colors.textDark : colors.textLight)}
+              />
+              <Text
+                style={[
+                  styles.toggleText,
+                  { color: isRecurring ? '#fff' : (isDark ? colors.textDark : colors.textLight) },
+                ]}
+              >
+                Repeat on selected days
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Day Selection */}
+          {isRecurring && (
+            <View style={styles.inputContainer}>
+              <Text style={[styles.label, { color: isDark ? colors.textDark : colors.textLight }]}>
+                Select Days *
+              </Text>
               <View style={styles.daysContainer}>
-                <Text style={[styles.label, { color: isDark ? colors.textDark : colors.textLight }]}>
-                  Select Days
-                </Text>
-                <View style={styles.daysGrid}>
-                  {DAYS_OF_WEEK.map((day, index) => (
-                    <TouchableOpacity
-                      key={index}
+                {DAYS_OF_WEEK.map((day, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={[
+                      styles.dayButton,
+                      {
+                        backgroundColor: selectedDays.includes(index)
+                          ? (isDark ? colors.dark.primary : colors.light.primary)
+                          : (isDark ? colors.dark.card : colors.light.card),
+                        borderColor: isDark ? '#444' : '#ddd',
+                      },
+                    ]}
+                    onPress={() => toggleDay(index)}
+                  >
+                    <Text
                       style={[
-                        styles.dayButton,
-                        selectedDays.includes(index) && {
-                          backgroundColor: isDark ? colors.primaryDark : colors.primaryLight,
-                        },
-                        !selectedDays.includes(index) && {
-                          backgroundColor: isDark ? '#333' : '#f5f5f5',
-                          borderColor: isDark ? '#555' : '#ddd',
-                          borderWidth: 1,
+                        styles.dayText,
+                        {
+                          color: selectedDays.includes(index)
+                            ? '#fff'
+                            : (isDark ? colors.textDark : colors.textLight),
                         },
                       ]}
-                      onPress={() => toggleDay(index)}
                     >
-                      <Text
-                        style={[
-                          styles.dayText,
-                          { color: selectedDays.includes(index) ? '#fff' : (isDark ? colors.textDark : colors.textLight) },
-                        ]}
-                      >
-                        {day}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {/* Action Buttons */}
-            <View style={styles.formActions}>
-              <TouchableOpacity
-                style={[styles.cancelButton, { backgroundColor: isDark ? '#333' : '#f5f5f5' }]}
-                onPress={() => setShowAddForm(false)}
-              >
-                <Text style={[styles.cancelButtonText, { color: isDark ? colors.textDark : colors.textLight }]}>
-                  Cancel
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.saveButton, { backgroundColor: isDark ? colors.primaryDark : colors.primaryLight }]}
-                onPress={handleAddTask}
-              >
-                <Text style={styles.saveButtonText}>Save Task</Text>
-              </TouchableOpacity>
-            </View>
-          </Animated.View>
-        )}
-
-        {/* Task Templates List */}
-        <View style={styles.templatesList}>
-          <Text style={[styles.sectionTitle, { color: isDark ? colors.textDark : colors.textLight }]}>
-            Your Task Templates
-          </Text>
-          {state?.taskTemplates && state.taskTemplates.length > 0 ? (
-            state.taskTemplates.map((template) => (
-              <Animated.View
-                key={template.id}
-                entering={SlideInRight.duration(300)}
-                style={[styles.templateCard, { backgroundColor: isDark ? colors.cardDark : colors.cardLight }]}
-              >
-                <View style={styles.templateHeader}>
-                  <View style={styles.templateInfo}>
-                    <Text style={[styles.templateTitle, { color: isDark ? colors.textDark : colors.textLight }]}>
-                      {template.title}
+                      {day}
                     </Text>
-                    <View style={styles.templateMeta}>
-                      {template.isAnytime ? (
-                        <View style={[styles.badge, { backgroundColor: isDark ? '#555' : '#e0e0e0' }]}>
-                          <Text style={[styles.badgeText, { color: isDark ? colors.textDark : colors.textLight }]}>
-                            Anytime
-                          </Text>
-                        </View>
-                      ) : (
-                        <View style={[styles.badge, { backgroundColor: isDark ? colors.primaryDark : colors.primaryLight }]}>
-                          <Text style={styles.badgeText}>
-                            {template.dueHour.toString().padStart(2, '0')}:00
-                          </Text>
-                        </View>
-                      )}
-                      {template.isRecurring && (
-                        <View style={[styles.badge, { backgroundColor: isDark ? '#4a3a1a' : '#fff3e0' }]}>
-                          <IconSymbol name="arrow.clockwise" size={12} color="#FF9800" />
-                          <Text style={[styles.badgeText, { color: '#FF9800', marginLeft: 4 }]}>
-                            Recurring
-                          </Text>
-                        </View>
-                      )}
-                    </View>
-                    {template.isRecurring && template.recurringDays.length > 0 && (
-                      <View style={styles.recurringDays}>
-                        {template.recurringDays.map((dayIndex) => (
-                          <Text
-                            key={dayIndex}
-                            style={[styles.recurringDayText, { color: isDark ? colors.textSecondaryDark : colors.textSecondaryLight }]}
-                          >
-                            {DAYS_OF_WEEK[dayIndex]}
-                          </Text>
-                        ))}
-                      </View>
-                    )}
-                  </View>
-                  <TouchableOpacity onPress={() => handleDeleteTemplate(template.id)}>
-                    <IconSymbol name="trash.fill" size={20} color="#F44336" />
                   </TouchableOpacity>
-                </View>
-              </Animated.View>
-            ))
-          ) : (
-            <View style={styles.emptyState}>
-              <IconSymbol name="calendar.badge.plus" size={64} color={isDark ? '#555' : '#ddd'} />
-              <Text style={[styles.emptyText, { color: isDark ? colors.textSecondaryDark : colors.textSecondaryLight }]}>
-                No task templates yet
-              </Text>
-              <Text style={[styles.emptySubtext, { color: isDark ? colors.textSecondaryDark : colors.textSecondaryLight }]}>
-                Create your first task template to get started
-              </Text>
+                ))}
+              </View>
             </View>
           )}
-        </View>
+
+          {/* Add Button */}
+          <TouchableOpacity
+            style={[
+              styles.addButton,
+              { backgroundColor: isDark ? colors.dark.primary : colors.light.primary },
+            ]}
+            onPress={handleAddTask}
+          >
+            <IconSymbol name="plus.circle.fill" size={24} color="#fff" />
+            <Text style={styles.addButtonText}>Add Task</Text>
+          </TouchableOpacity>
+
+          {/* Existing Templates */}
+          {state?.taskTemplates && state.taskTemplates.length > 0 && (
+            <View style={styles.templatesContainer}>
+              <Text style={[styles.sectionTitle, { color: isDark ? colors.textDark : colors.textLight }]}>
+                Task Templates
+              </Text>
+              {state.taskTemplates.map((template) => (
+                <Animated.View
+                  key={template.id}
+                  entering={SlideInRight.duration(300)}
+                  style={[
+                    styles.templateCard,
+                    { backgroundColor: isDark ? colors.dark.card : colors.light.card },
+                  ]}
+                >
+                  <View style={styles.templateContent}>
+                    <View style={styles.templateInfo}>
+                      <Text style={[styles.templateTitle, { color: isDark ? colors.textDark : colors.textLight }]}>
+                        {template.title}
+                      </Text>
+                      {template.description && (
+                        <Text style={[styles.templateDescription, { color: isDark ? colors.dark.textSecondary : colors.light.textSecondary }]}>
+                          {template.description}
+                        </Text>
+                      )}
+                      <View style={styles.templateMeta}>
+                        <Text style={[styles.templateMetaText, { color: isDark ? colors.dark.textSecondary : colors.light.textSecondary }]}>
+                          {template.isAnytime ? 'Anytime' : `${template.dueHour}:00`}
+                        </Text>
+                        {template.isRecurring && (
+                          <Text style={[styles.templateMetaText, { color: isDark ? colors.dark.textSecondary : colors.light.textSecondary }]}>
+                            • {template.recurringDays.map(d => DAYS_OF_WEEK[d]).join(', ')}
+                          </Text>
+                        )}
+                      </View>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.deleteButton}
+                      onPress={() => handleDeleteTemplate(template.id)}
+                    >
+                      <IconSymbol name="trash" size={20} color="#F44336" />
+                    </TouchableOpacity>
+                  </View>
+                </Animated.View>
+              ))}
+            </View>
+          )}
+        </Animated.View>
       </ScrollView>
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-  },
-  scrollView: {
     flex: 1,
   },
   scrollContent: {
     padding: spacing.lg,
     paddingBottom: 100,
   },
-  header: {
-    marginBottom: spacing.xl,
-  },
   title: {
     fontSize: typography.xxl,
     fontWeight: '700',
-    marginBottom: spacing.xs,
+    marginBottom: spacing.xl,
   },
-  subtitle: {
-    fontSize: typography.md,
-  },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: spacing.lg,
-    borderRadius: borderRadius.lg,
+  inputContainer: {
     marginBottom: spacing.lg,
-  },
-  addButtonText: {
-    color: '#fff',
-    fontSize: typography.lg,
-    fontWeight: '600',
-    marginLeft: spacing.sm,
-  },
-  formCard: {
-    padding: spacing.lg,
-    borderRadius: borderRadius.lg,
-    marginBottom: spacing.lg,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 4,
-      },
-      web: {
-        boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
-      },
-    }),
-  },
-  formHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-  },
-  formTitle: {
-    fontSize: typography.xl,
-    fontWeight: '700',
   },
   label: {
     fontSize: typography.md,
     fontWeight: '600',
     marginBottom: spacing.sm,
-    marginTop: spacing.md,
   },
   input: {
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    fontSize: typography.md,
     borderWidth: 1,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    fontSize: typography.md,
   },
-  toggleContainer: {
-    flexDirection: 'row',
-    gap: spacing.sm,
+  textArea: {
+    minHeight: 80,
+    textAlignVertical: 'top',
   },
   toggleButton: {
-    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: spacing.md,
     borderRadius: borderRadius.md,
-    alignItems: 'center',
+    borderWidth: 1,
+    gap: spacing.sm,
   },
   toggleText: {
     fontSize: typography.md,
-    fontWeight: '600',
-  },
-  timePickerContainer: {
-    marginTop: spacing.sm,
+    fontWeight: '500',
   },
   timeButton: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: spacing.md,
     borderRadius: borderRadius.md,
+    borderWidth: 1,
     gap: spacing.sm,
+    marginTop: spacing.sm,
   },
   timeText: {
     fontSize: typography.lg,
     fontWeight: '600',
   },
-  recurringContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: spacing.md,
-  },
-  switch: {
-    width: 50,
-    height: 28,
-    borderRadius: 14,
-    padding: 2,
-    justifyContent: 'center',
-  },
-  switchThumb: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#fff',
-  },
   daysContainer: {
-    marginTop: spacing.md,
-  },
-  daysGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.sm,
   },
   dayButton: {
-    width: 45,
-    height: 45,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
     borderRadius: borderRadius.md,
+    borderWidth: 1,
+    minWidth: 50,
     alignItems: 'center',
-    justifyContent: 'center',
   },
   dayText: {
     fontSize: typography.sm,
     fontWeight: '600',
   },
-  formActions: {
+  addButton: {
     flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.lg,
+    borderRadius: borderRadius.md,
     gap: spacing.sm,
-    marginTop: spacing.xl,
+    marginTop: spacing.md,
   },
-  cancelButton: {
-    flex: 1,
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    fontSize: typography.md,
-    fontWeight: '600',
-  },
-  saveButton: {
-    flex: 1,
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    alignItems: 'center',
-  },
-  saveButtonText: {
+  addButtonText: {
     color: '#fff',
-    fontSize: typography.md,
-    fontWeight: '600',
+    fontSize: typography.lg,
+    fontWeight: '700',
   },
-  templatesList: {
-    marginTop: spacing.lg,
+  templatesContainer: {
+    marginTop: spacing.xl,
   },
   sectionTitle: {
     fontSize: typography.xl,
@@ -537,25 +441,25 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   templateCard: {
-    padding: spacing.lg,
-    borderRadius: borderRadius.lg,
-    marginBottom: spacing.md,
+    padding: spacing.md,
+    borderRadius: borderRadius.md,
+    marginBottom: spacing.sm,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
-        shadowRadius: 8,
+        shadowRadius: 4,
       },
       android: {
-        elevation: 4,
+        elevation: 2,
       },
       web: {
-        boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
+        boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
       },
     }),
   },
-  templateHeader: {
+  templateContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
@@ -564,49 +468,24 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   templateTitle: {
-    fontSize: typography.lg,
+    fontSize: typography.md,
     fontWeight: '600',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  templateDescription: {
+    fontSize: typography.sm,
+    marginBottom: spacing.xs,
   },
   templateMeta: {
     flexDirection: 'row',
     gap: spacing.sm,
-    marginBottom: spacing.xs,
   },
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.sm,
+  templateMetaText: {
+    fontSize: typography.sm,
   },
-  badgeText: {
-    fontSize: typography.xs,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  recurringDays: {
-    flexDirection: 'row',
-    gap: spacing.xs,
-    marginTop: spacing.xs,
-  },
-  recurringDayText: {
-    fontSize: typography.xs,
-    fontWeight: '500',
-  },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.xxl * 2,
-  },
-  emptyText: {
-    fontSize: typography.lg,
-    fontWeight: '600',
-    marginTop: spacing.lg,
-  },
-  emptySubtext: {
-    fontSize: typography.md,
-    marginTop: spacing.xs,
-    textAlign: 'center',
+  deleteButton: {
+    padding: spacing.sm,
   },
 });
+
+export default CalendarScreen;

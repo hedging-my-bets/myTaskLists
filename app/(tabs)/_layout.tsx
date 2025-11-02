@@ -6,16 +6,19 @@ import { Stack } from 'expo-router';
 
 const tabs: TabBarItem[] = [
   {
+    name: 'home',
     route: '/(tabs)/(home)',
     label: 'Home',
     icon: 'house.fill',
   },
   {
+    name: 'calendar',
     route: '/(tabs)/calendar',
     label: 'Calendar',
     icon: 'calendar',
   },
   {
+    name: 'settings',
     route: '/(tabs)/settings',
     label: 'Settings',
     icon: 'gearshape.fill',

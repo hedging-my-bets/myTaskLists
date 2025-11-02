@@ -1,6 +1,6 @@
 
 import { colors, spacing, borderRadius, typography } from '@/styles/commonStyles';
-import Animated, { FadeIn, SlideInRight } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeOutUp, Layout } from 'react-native-reanimated';
 import { IconSymbol } from './IconSymbol';
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, useColorScheme, TextInput, Alert, Platform } from 'react-native';
@@ -14,6 +14,7 @@ interface TaskCardProps {
   onPrev: () => void;
   onNext: () => void;
   onEditTitle: (newTitle: string) => void;
+  onEditDescription?: (newDescription: string) => void;
   taskNumber: number;
   totalTasks: number;
 }
@@ -26,19 +27,29 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onPrev,
   onNext,
   onEditTitle,
+  onEditDescription,
   taskNumber,
   totalTasks,
 }) => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [editedTitle, setEditedTitle] = useState(task.title);
+  const [editedDescription, setEditedDescription] = useState(task.description || '');
 
   const handleSaveTitle = () => {
     if (editedTitle.trim() && editedTitle !== task.title) {
       onEditTitle(editedTitle.trim());
     }
-    setIsEditing(false);
+    setIsEditingTitle(false);
+  };
+
+  const handleSaveDescription = () => {
+    if (onEditDescription && editedDescription !== task.description) {
+      onEditDescription(editedDescription.trim());
+    }
+    setIsEditingDescription(false);
   };
 
   const getStatusIcon = () => {
@@ -64,7 +75,9 @@ const TaskCard: React.FC<TaskCardProps> = ({
 
   return (
     <Animated.View
-      entering={SlideInRight.duration(300)}
+      entering={FadeInDown.duration(400).springify()}
+      exiting={FadeOutUp.duration(300)}
+      layout={Layout.springify().damping(15).stiffness(100)}
       style={[
         styles.container,
         { backgroundColor: getCardBackgroundColor() },
@@ -88,7 +101,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
       </View>
 
       {/* Task title */}
-      {isEditing ? (
+      {isEditingTitle ? (
         <TextInput
           style={[
             styles.titleInput,
@@ -105,9 +118,39 @@ const TaskCard: React.FC<TaskCardProps> = ({
           multiline
         />
       ) : (
-        <TouchableOpacity onPress={() => setIsEditing(true)} activeOpacity={0.7}>
+        <TouchableOpacity onPress={() => setIsEditingTitle(true)} activeOpacity={0.7}>
           <Text style={[styles.title, { color: isDark ? colors.dark.text : colors.light.text }]}>
             {task.title}
+          </Text>
+        </TouchableOpacity>
+      )}
+
+      {/* Task description */}
+      {isEditingDescription ? (
+        <TextInput
+          style={[
+            styles.descriptionInput,
+            {
+              color: isDark ? colors.dark.text : colors.light.text,
+              backgroundColor: isDark ? '#333' : '#f5f5f5',
+            },
+          ]}
+          value={editedDescription}
+          onChangeText={setEditedDescription}
+          onBlur={handleSaveDescription}
+          onSubmitEditing={handleSaveDescription}
+          placeholder="Add a description..."
+          placeholderTextColor={isDark ? '#666' : '#999'}
+          autoFocus
+          multiline
+        />
+      ) : (
+        <TouchableOpacity onPress={() => setIsEditingDescription(true)} activeOpacity={0.7}>
+          <Text style={[
+            styles.description,
+            { color: isDark ? colors.dark.textSecondary : colors.light.textSecondary }
+          ]}>
+            {task.description || 'Tap to add description...'}
           </Text>
         </TouchableOpacity>
       )}
@@ -238,16 +281,29 @@ const styles = StyleSheet.create({
   title: {
     fontSize: typography.h3.fontSize,
     fontWeight: '600',
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
     lineHeight: 28,
   },
   titleInput: {
     fontSize: typography.h3.fontSize,
     fontWeight: '600',
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
     padding: spacing.sm,
     borderRadius: borderRadius.md,
     lineHeight: 28,
+  },
+  description: {
+    fontSize: typography.body.fontSize,
+    lineHeight: 22,
+    marginBottom: spacing.md,
+  },
+  descriptionInput: {
+    fontSize: typography.body.fontSize,
+    lineHeight: 22,
+    marginBottom: spacing.md,
+    padding: spacing.sm,
+    borderRadius: borderRadius.md,
+    minHeight: 60,
   },
   statusContainer: {
     flexDirection: 'row',
