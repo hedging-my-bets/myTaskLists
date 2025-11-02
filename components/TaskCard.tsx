@@ -3,7 +3,7 @@ import { colors, spacing, borderRadius, typography } from '@/styles/commonStyles
 import Animated, { FadeIn, SlideInRight } from 'react-native-reanimated';
 import { IconSymbol } from './IconSymbol';
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, useColorScheme, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, useColorScheme, TextInput, Alert, Platform } from 'react-native';
 import { Task } from '@/types';
 
 interface TaskCardProps {
@@ -192,10 +192,16 @@ const styles = StyleSheet.create({
     marginVertical: spacing.sm,
     ...Platform.select({
       ios: {
-        boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
       },
       android: {
         elevation: 4,
+      },
+      web: {
+        boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
       },
     }),
   },
