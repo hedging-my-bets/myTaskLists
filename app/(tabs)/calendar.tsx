@@ -121,25 +121,25 @@ const CalendarScreen = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? colors.backgroundDark : colors.backgroundLight }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? colors.dark.background : colors.light.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Animated.View entering={FadeIn.duration(400)}>
-          <Text style={[styles.title, { color: isDark ? colors.textDark : colors.textLight }]}>
+          <Text style={[styles.title, { color: isDark ? colors.dark.text : colors.light.text }]}>
             Add New Task
           </Text>
 
           {/* Task Title */}
           <View style={styles.inputContainer}>
-            <Text style={[styles.label, { color: isDark ? colors.textDark : colors.textLight }]}>
+            <Text style={[styles.label, { color: isDark ? colors.dark.text : colors.light.text }]}>
               Task Title *
             </Text>
             <TextInput
               style={[
                 styles.input,
                 {
-                  color: isDark ? colors.textDark : colors.textLight,
+                  color: isDark ? colors.dark.text : colors.light.text,
                   backgroundColor: isDark ? colors.dark.card : colors.light.card,
-                  borderColor: isDark ? '#444' : '#ddd',
+                  borderColor: isDark ? colors.dark.border : colors.light.border,
                 },
               ]}
               value={title}
@@ -151,7 +151,7 @@ const CalendarScreen = () => {
 
           {/* Task Description */}
           <View style={styles.inputContainer}>
-            <Text style={[styles.label, { color: isDark ? colors.textDark : colors.textLight }]}>
+            <Text style={[styles.label, { color: isDark ? colors.dark.text : colors.light.text }]}>
               Description
             </Text>
             <TextInput
@@ -159,9 +159,9 @@ const CalendarScreen = () => {
                 styles.input,
                 styles.textArea,
                 {
-                  color: isDark ? colors.textDark : colors.textLight,
+                  color: isDark ? colors.dark.text : colors.light.text,
                   backgroundColor: isDark ? colors.dark.card : colors.light.card,
-                  borderColor: isDark ? '#444' : '#ddd',
+                  borderColor: isDark ? colors.dark.border : colors.light.border,
                 },
               ]}
               value={description}
@@ -175,7 +175,7 @@ const CalendarScreen = () => {
 
           {/* Date Selection */}
           <View style={styles.inputContainer}>
-            <Text style={[styles.label, { color: isDark ? colors.textDark : colors.textLight }]}>
+            <Text style={[styles.label, { color: isDark ? colors.dark.text : colors.light.text }]}>
               Date *
             </Text>
             <TouchableOpacity
@@ -183,13 +183,13 @@ const CalendarScreen = () => {
                 styles.dateButton,
                 {
                   backgroundColor: isDark ? colors.dark.card : colors.light.card,
-                  borderColor: isDark ? '#444' : '#ddd',
+                  borderColor: isDark ? colors.dark.border : colors.light.border,
                 },
               ]}
               onPress={() => setShowDatePicker(true)}
             >
-              <IconSymbol name="calendar" size={24} color={isDark ? colors.textDark : colors.textLight} />
-              <Text style={[styles.dateText, { color: isDark ? colors.textDark : colors.textLight }]}>
+              <IconSymbol name="calendar" size={24} color={isDark ? colors.dark.text : colors.light.text} />
+              <Text style={[styles.dateText, { color: isDark ? colors.dark.text : colors.light.text }]}>
                 {formatDate(selectedDate)}
               </Text>
             </TouchableOpacity>
@@ -207,7 +207,7 @@ const CalendarScreen = () => {
 
           {/* Time Selection */}
           <View style={styles.inputContainer}>
-            <Text style={[styles.label, { color: isDark ? colors.textDark : colors.textLight }]}>
+            <Text style={[styles.label, { color: isDark ? colors.dark.text : colors.light.text }]}>
               Time
             </Text>
             <TouchableOpacity
@@ -217,7 +217,7 @@ const CalendarScreen = () => {
                   backgroundColor: isAnytime
                     ? (isDark ? colors.dark.primary : colors.light.primary)
                     : (isDark ? colors.dark.card : colors.light.card),
-                  borderColor: isDark ? '#444' : '#ddd',
+                  borderColor: isDark ? colors.dark.border : colors.light.border,
                 },
               ]}
               onPress={() => setIsAnytime(!isAnytime)}
@@ -225,12 +225,12 @@ const CalendarScreen = () => {
               <IconSymbol
                 name={isAnytime ? 'checkmark.circle.fill' : 'circle'}
                 size={24}
-                color={isAnytime ? '#fff' : (isDark ? colors.textDark : colors.textLight)}
+                color={isAnytime ? '#fff' : (isDark ? colors.dark.text : colors.light.text)}
               />
               <Text
                 style={[
                   styles.toggleText,
-                  { color: isAnytime ? '#fff' : (isDark ? colors.textDark : colors.textLight) },
+                  { color: isAnytime ? '#fff' : (isDark ? colors.dark.text : colors.light.text) },
                 ]}
               >
                 Anytime during the day
@@ -243,13 +243,13 @@ const CalendarScreen = () => {
                   styles.timeButton,
                   {
                     backgroundColor: isDark ? colors.dark.card : colors.light.card,
-                    borderColor: isDark ? '#444' : '#ddd',
+                    borderColor: isDark ? colors.dark.border : colors.light.border,
                   },
                 ]}
                 onPress={() => setShowTimePicker(true)}
               >
-                <IconSymbol name="clock" size={24} color={isDark ? colors.textDark : colors.textLight} />
-                <Text style={[styles.timeText, { color: isDark ? colors.textDark : colors.textLight }]}>
+                <IconSymbol name="clock" size={24} color={isDark ? colors.dark.text : colors.light.text} />
+                <Text style={[styles.timeText, { color: isDark ? colors.dark.text : colors.light.text }]}>
                   {formatTime(selectedTime)}
                 </Text>
               </TouchableOpacity>
@@ -268,7 +268,7 @@ const CalendarScreen = () => {
 
           {/* Recurring Toggle */}
           <View style={styles.inputContainer}>
-            <Text style={[styles.label, { color: isDark ? colors.textDark : colors.textLight }]}>
+            <Text style={[styles.label, { color: isDark ? colors.dark.text : colors.light.text }]}>
               Recurring
             </Text>
             <TouchableOpacity
@@ -278,7 +278,7 @@ const CalendarScreen = () => {
                   backgroundColor: isRecurring
                     ? (isDark ? colors.dark.primary : colors.light.primary)
                     : (isDark ? colors.dark.card : colors.light.card),
-                  borderColor: isDark ? '#444' : '#ddd',
+                  borderColor: isDark ? colors.dark.border : colors.light.border,
                 },
               ]}
               onPress={() => setIsRecurring(!isRecurring)}
@@ -286,12 +286,12 @@ const CalendarScreen = () => {
               <IconSymbol
                 name={isRecurring ? 'checkmark.circle.fill' : 'circle'}
                 size={24}
-                color={isRecurring ? '#fff' : (isDark ? colors.textDark : colors.textLight)}
+                color={isRecurring ? '#fff' : (isDark ? colors.dark.text : colors.light.text)}
               />
               <Text
                 style={[
                   styles.toggleText,
-                  { color: isRecurring ? '#fff' : (isDark ? colors.textDark : colors.textLight) },
+                  { color: isRecurring ? '#fff' : (isDark ? colors.dark.text : colors.light.text) },
                 ]}
               >
                 Repeat on selected days
@@ -302,7 +302,7 @@ const CalendarScreen = () => {
           {/* Day Selection */}
           {isRecurring && (
             <View style={styles.inputContainer}>
-              <Text style={[styles.label, { color: isDark ? colors.textDark : colors.textLight }]}>
+              <Text style={[styles.label, { color: isDark ? colors.dark.text : colors.light.text }]}>
                 Select Days *
               </Text>
               <View style={styles.daysContainer}>
@@ -315,7 +315,7 @@ const CalendarScreen = () => {
                         backgroundColor: selectedDays.includes(index)
                           ? (isDark ? colors.dark.primary : colors.light.primary)
                           : (isDark ? colors.dark.card : colors.light.card),
-                        borderColor: isDark ? '#444' : '#ddd',
+                        borderColor: isDark ? colors.dark.border : colors.light.border,
                       },
                     ]}
                     onPress={() => toggleDay(index)}
@@ -326,7 +326,7 @@ const CalendarScreen = () => {
                         {
                           color: selectedDays.includes(index)
                             ? '#fff'
-                            : (isDark ? colors.textDark : colors.textLight),
+                            : (isDark ? colors.dark.text : colors.light.text),
                         },
                       ]}
                     >
@@ -353,7 +353,7 @@ const CalendarScreen = () => {
           {/* Existing Templates */}
           {state?.taskTemplates && state.taskTemplates.length > 0 && (
             <View style={styles.templatesContainer}>
-              <Text style={[styles.sectionTitle, { color: isDark ? colors.textDark : colors.textLight }]}>
+              <Text style={[styles.sectionTitle, { color: isDark ? colors.dark.text : colors.light.text }]}>
                 Task Templates
               </Text>
               {state.taskTemplates.map((template) => (
@@ -367,7 +367,7 @@ const CalendarScreen = () => {
                 >
                   <View style={styles.templateContent}>
                     <View style={styles.templateInfo}>
-                      <Text style={[styles.templateTitle, { color: isDark ? colors.textDark : colors.textLight }]}>
+                      <Text style={[styles.templateTitle, { color: isDark ? colors.dark.text : colors.light.text }]}>
                         {template.title}
                       </Text>
                       {template.description && (
@@ -390,7 +390,7 @@ const CalendarScreen = () => {
                       style={styles.deleteButton}
                       onPress={() => handleDeleteTemplate(template.id)}
                     >
-                      <IconSymbol name="trash" size={20} color="#F44336" />
+                      <IconSymbol name="trash" size={20} color="#F87171" />
                     </TouchableOpacity>
                   </View>
                 </Animated.View>
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   title: {
-    fontSize: typography.xxl,
+    fontSize: typography.h1.fontSize,
     fontWeight: '700',
     marginBottom: spacing.xl,
   },
@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   label: {
-    fontSize: typography.md,
+    fontSize: typography.body.fontSize,
     fontWeight: '600',
     marginBottom: spacing.sm,
   },
@@ -428,7 +428,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: borderRadius.md,
     padding: spacing.md,
-    fontSize: typography.md,
+    fontSize: typography.body.fontSize,
   },
   textArea: {
     minHeight: 80,
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   dateText: {
-    fontSize: typography.md,
+    fontSize: typography.body.fontSize,
     fontWeight: '600',
   },
   toggleButton: {
@@ -455,7 +455,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   toggleText: {
-    fontSize: typography.md,
+    fontSize: typography.body.fontSize,
     fontWeight: '500',
   },
   timeButton: {
@@ -468,7 +468,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   timeText: {
-    fontSize: typography.md,
+    fontSize: typography.body.fontSize,
     fontWeight: '600',
   },
   daysContainer: {
@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dayText: {
-    fontSize: typography.sm,
+    fontSize: typography.bodySmall.fontSize,
     fontWeight: '600',
   },
   addButton: {
@@ -499,14 +499,14 @@ const styles = StyleSheet.create({
   },
   addButtonText: {
     color: '#fff',
-    fontSize: typography.lg,
+    fontSize: typography.h3.fontSize,
     fontWeight: '700',
   },
   templatesContainer: {
     marginTop: spacing.xl,
   },
   sectionTitle: {
-    fontSize: typography.xl,
+    fontSize: typography.h2.fontSize,
     fontWeight: '700',
     marginBottom: spacing.md,
   },
@@ -538,12 +538,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   templateTitle: {
-    fontSize: typography.md,
+    fontSize: typography.body.fontSize,
     fontWeight: '600',
     marginBottom: spacing.xs,
   },
   templateDescription: {
-    fontSize: typography.sm,
+    fontSize: typography.bodySmall.fontSize,
     marginBottom: spacing.xs,
   },
   templateMeta: {
@@ -551,7 +551,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   templateMetaText: {
-    fontSize: typography.sm,
+    fontSize: typography.bodySmall.fontSize,
   },
   deleteButton: {
     padding: spacing.sm,
