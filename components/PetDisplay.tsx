@@ -41,7 +41,7 @@ export default function PetDisplay({ petState }: PetDisplayProps) {
       
       {nextStage && (
         <View style={styles.progressContainer}>
-          <View style={styles.progressBarBackground}>
+          <View style={[styles.progressBarBackground, { backgroundColor: colorScheme === 'dark' ? 'rgba(96, 165, 250, 0.15)' : 'rgba(139, 127, 214, 0.2)' }]}>
             <Animated.View 
               style={[
                 styles.progressBarFill,
@@ -72,8 +72,14 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     borderRadius: borderRadius.xl,
     alignItems: 'center',
-    boxShadow: '0px 4px 12px rgba(139, 127, 214, 0.15)',
-    elevation: 4,
+    marginHorizontal: spacing.md,
+    marginTop: spacing.md,
+    marginBottom: spacing.lg,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
   },
   petEmoji: {
     fontSize: 120,
@@ -94,7 +100,6 @@ const styles = StyleSheet.create({
   progressBarBackground: {
     width: '100%',
     height: 8,
-    backgroundColor: 'rgba(139, 127, 214, 0.2)',
     borderRadius: borderRadius.full,
     overflow: 'hidden',
     marginBottom: spacing.sm,

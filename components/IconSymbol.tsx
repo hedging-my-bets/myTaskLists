@@ -1,3 +1,4 @@
+
 // This file is a fallback for using MaterialIcons on Android and web.
 
 import React from "react";
@@ -11,11 +12,12 @@ import {
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 // Add your SFSymbol to MaterialIcons mappings here.
+// 30+ consistent small-surface icons for PetProgress
 const MAPPING = {
   // See MaterialIcons here: https://icons.expo.fyi
   // See SF Symbols in the SF Symbols app on Mac.
 
-  // Navigation & Home
+  // Navigation & Home (Core)
   "house.fill": "home",
   "house": "home-outlined",
   "arrow.left": "arrow-back",
@@ -29,7 +31,38 @@ const MAPPING = {
   "arrow.clockwise": "refresh",
   "arrow.counterclockwise": "refresh",
 
-  // Communication & Social
+  // Actions & Controls (Core)
+  "plus": "add",
+  "plus.circle.fill": "add-circle",
+  "plus.circle": "add-circle-outline",
+  "minus": "remove",
+  "minus.circle.fill": "remove-circle",
+  "minus.circle": "remove-circle-outline",
+  "xmark": "close",
+  "xmark.circle.fill": "cancel",
+  "xmark.circle": "cancel-outlined",
+  "checkmark": "check",
+  "checkmark.circle.fill": "check-circle",
+  "checkmark.circle": "check-circle-outline",
+  "checkmark.square.fill": "check-box",
+  "checkmark.square": "check-box-outline-blank",
+  "multiply": "clear",
+  "trash.fill": "delete",
+  "trash": "delete-outline",
+
+  // Editing & Creation (Core)
+  "pencil": "edit",
+  "pencil.circle.fill": "edit",
+  "pencil.and.list.clipboard": "edit-note",
+  "square.and.pencil": "edit",
+  "doc.text.fill": "description",
+  "doc.text": "description",
+  "folder.fill": "folder",
+  "folder": "folder-open",
+  "doc.fill": "insert-drive-file",
+  "doc": "insert-drive-file",
+
+  // Communication & Social (Core)
   "paperplane.fill": "send",
   "paperplane": "send-outlined",
   "envelope.fill": "mail",
@@ -43,31 +76,7 @@ const MAPPING = {
   "heart.fill": "favorite",
   "heart": "favorite-border",
 
-  // Actions & Controls
-  "plus": "add",
-  "minus": "remove",
-  "xmark": "close",
-  "checkmark": "check",
-  "checkmark.circle.fill": "check-circle",
-  "checkmark.circle": "check-circle-outline",
-  "checkmark.square.fill": "check-box",
-  "checkmark.square": "check-box-outline-blank",
-  "multiply": "clear",
-  "trash.fill": "delete",
-  "trash": "delete-outline",
-
-  // Editing & Creation
-  "pencil": "edit",
-  "pencil.and.list.clipboard": "edit-note",
-  "square.and.pencil": "edit",
-  "doc.text.fill": "description",
-  "doc.text": "description",
-  "folder.fill": "folder",
-  "folder": "folder-open",
-  "doc.fill": "insert-drive-file",
-  "doc": "insert-drive-file",
-
-  // Media & Content
+  // Media & Content (Core)
   "photo.fill": "image",
   "photo": "image-outlined",
   "camera.fill": "camera-alt",
@@ -81,7 +90,7 @@ const MAPPING = {
   "pause.fill": "pause",
   "stop.fill": "stop",
 
-  // System & Settings
+  // System & Settings (Core)
   "gear": "settings",
   "gearshape.fill": "settings",
   "slider.horizontal.3": "tune",
@@ -92,17 +101,20 @@ const MAPPING = {
   "questionmark.circle.fill": "help",
   "questionmark.circle": "help-outline",
 
-  // Shapes & Symbols
+  // Shapes & Symbols (Core)
   "square": "square",
+  "square.fill": "square",
+  "square.grid.2x2.fill": "grid-view",
   "square.grid.3x3": "apps",
   "circle": "circle",
+  "circle.fill": "circle",
   "triangle.fill": "change-history",
   "star.fill": "star",
   "star": "star-border",
   "bookmark.fill": "bookmark",
   "bookmark": "bookmark-border",
 
-  // Technology & Code
+  // Technology & Code (Core)
   "chevron.left.forwardslash.chevron.right": "code",
   "qrcode.viewfinder": "qr-code",
   "wifi": "wifi",
@@ -112,7 +124,7 @@ const MAPPING = {
   "lock.fill": "lock",
   "lock.open.fill": "lock-open",
 
-  // Shopping & Commerce
+  // Shopping & Commerce (Extended)
   "cart.fill": "shopping-cart",
   "cart": "shopping-cart-outlined",
   "creditcard.fill": "credit-card",
@@ -121,20 +133,22 @@ const MAPPING = {
   "bag.fill": "shopping-bag",
   "bag": "shopping-bag",
 
-  // Location & Maps
+  // Location & Maps (Extended)
   "location.fill": "location-on",
   "location": "location-on",
   "map.fill": "map",
   "map": "map",
   "compass.drawing": "explore",
 
-  // Time & Calendar
+  // Time & Calendar (Core - PetProgress specific)
   "clock.fill": "access-time",
   "clock": "access-time",
   "calendar": "event",
+  "calendar.circle.fill": "event",
   "timer": "timer",
+  "hourglass": "hourglass-empty",
 
-  // User & Profile
+  // User & Profile (Core)
   "person": "person",
   "person.fill": "person",
   "person.2.fill": "group",
@@ -144,23 +158,41 @@ const MAPPING = {
   "person.crop.circle.fill": "account-circle",
   "person.crop.circle": "account-circle",
 
-  // Sharing & Export
+  // Sharing & Export (Extended)
   "square.and.arrow.up": "share",
   "square.and.arrow.down": "download",
   "arrow.up.doc.fill": "upload-file",
   "link": "link",
 
-  // Search & Discovery
+  // Search & Discovery (Extended)
   "magnifyingglass": "search",
   "line.3.horizontal.decrease": "filter-list",
   "arrow.up.arrow.down": "sort",
 
-  // Visibility & Display
+  // Visibility & Display (Extended)
   "eye.fill": "visibility",
   "eye.slash.fill": "visibility-off",
   "lightbulb.fill": "lightbulb",
   "moon.fill": "dark-mode",
   "sun.max.fill": "light-mode",
+
+  // Task & Progress (PetProgress specific - 30 icons total)
+  "list.bullet": "list",
+  "list.bullet.circle.fill": "list-alt",
+  "chart.bar.fill": "bar-chart",
+  "chart.pie.fill": "pie-chart",
+  "flag.fill": "flag",
+  "flag": "outlined-flag",
+  "trophy.fill": "emoji-events",
+  "medal.fill": "military-tech",
+  "target": "track-changes",
+  "bolt.fill": "flash-on",
+  "flame.fill": "local-fire-department",
+  "sparkles": "auto-awesome",
+  "arrow.right.circle.fill": "arrow-circle-right",
+  "arrow.left.circle.fill": "arrow-circle-left",
+  "arrow.up.circle.fill": "arrow-circle-up",
+  "arrow.down.circle.fill": "arrow-circle-down",
 } as Partial<
   Record<
     import("expo-symbols").SymbolViewProps["name"],

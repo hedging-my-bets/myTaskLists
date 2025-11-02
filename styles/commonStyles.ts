@@ -1,9 +1,10 @@
 
 import { StyleSheet, ViewStyle, TextStyle } from 'react-native';
 
-// PetProgress Color Palette - Enhanced contrast for dark mode
+// PetProgress Color Palette - Bright-Trust (Dark)
+// This is the official color system that should be used across ALL components and widgets
 export const colors = {
-  // Light mode (keeping for compatibility, but app is primarily dark)
+  // Light mode (keeping for compatibility)
   light: {
     background: '#F8F7FC',
     card: '#FFFFFF',
@@ -13,29 +14,29 @@ export const colors = {
     primaryDark: '#3B82F6',
     secondary: '#22D3EE',
     accent: '#A78BFA',
-    success: '#22C55E',
+    success: '#34D399',
     warning: '#FBBF24',
     error: '#F87171',
     border: '#E5E5EA',
     shadow: 'rgba(96, 165, 250, 0.15)',
-    reward: '#34D399',
-  },
-  // Dark mode - Enhanced contrast for better readability
-  dark: {
-    background: '#000000',        // Pure black for maximum contrast
-    card: '#1A1A1A',              // Dark gray for cards
-    text: '#FFFFFF',              // Pure white for text
-    textSecondary: '#B8B8B8',     // Lighter gray for secondary text (better contrast)
-    primary: '#60A5FA',
-    primaryDark: '#3B82F6',
-    secondary: '#22D3EE',
-    accent: '#A78BFA',
-    success: '#34D399',
-    warning: '#FBBF24',
-    error: '#F87171',
-    border: '#2A2A2A',            // Slightly lighter border
-    shadow: 'rgba(0, 0, 0, 0.5)',
     reward: '#22C55E',
+  },
+  // Dark mode - Bright-Trust palette with high contrast
+  dark: {
+    background: '#0B1220',        // Deep blue-black background
+    card: '#121826',              // Elevated surface color
+    text: '#FFFFFF',              // Pure white for maximum contrast
+    textSecondary: '#A8B1C7',     // Muted blue-gray for secondary text
+    primary: '#60A5FA',           // Brand blue
+    primaryDark: '#3B82F6',       // Darker brand blue
+    secondary: '#22D3EE',         // Cyan accent
+    accent: '#A78BFA',            // Purple highlight
+    success: '#34D399',           // Green success
+    warning: '#FBBF24',           // Amber warning
+    error: '#F87171',             // Red error
+    border: '#1E293B',            // Subtle border
+    shadow: 'rgba(0, 0, 0, 0.5)', // Deep shadow
+    reward: '#22C55E',            // Bright green reward
   },
 };
 

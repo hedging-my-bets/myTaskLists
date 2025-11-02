@@ -14,6 +14,7 @@ interface TaskListProps {
 const TaskList: React.FC<TaskListProps> = ({ tasks, currentTaskId, onTaskPress }) => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const theme = isDark ? colors.dark : colors.light;
 
   const getStatusIcon = (task: Task) => {
     if (task.isDone) return '✓';
@@ -23,20 +24,20 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, currentTaskId, onTaskPress }
   };
 
   const getStatusColor = (task: Task) => {
-    if (task.isDone) return '#4CAF50';
-    if (task.isSkipped) return '#FF9800';
-    if (task.isMissed) return '#F44336';
-    return isDark ? colors.dark.textSecondary : colors.light.textSecondary;
+    if (task.isDone) return colors.dark.reward; // #22C55E
+    if (task.isSkipped) return colors.dark.warning; // #FBBF24
+    if (task.isMissed) return colors.dark.error; // #F87171
+    return theme.textSecondary;
   };
 
   const getTaskBackgroundColor = (task: Task) => {
     if (task.id === currentTaskId) {
-      return isDark ? colors.dark.primary + '20' : colors.light.primary + '20';
+      return isDark ? 'rgba(96, 165, 250, 0.15)' : 'rgba(96, 165, 250, 0.1)'; // Primary tint
     }
     if (task.isDone) {
-      return isDark ? '#1b3a1b' : '#e8f5e9';
+      return isDark ? 'rgba(34, 197, 94, 0.1)' : '#e8f5e9'; // Success tint
     }
-    return isDark ? colors.dark.card : colors.light.card;
+    return theme.card; // #121826 in dark mode
   };
 
   const handleTaskPress = (task: Task) => {
@@ -63,9 +64,9 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, currentTaskId, onTaskPress }
               {
                 backgroundColor: getTaskBackgroundColor(task),
                 borderLeftWidth: task.id === currentTaskId ? 4 : 0,
-                borderLeftColor: isDark ? colors.dark.primary : colors.light.primary,
+                borderLeftColor: theme.primary, // #60A5FA
                 borderWidth: task.isSkipped ? 2 : 0,
-                borderColor: task.isSkipped ? '#FF9800' : 'transparent',
+                borderColor: task.isSkipped ? colors.dark.warning : 'transparent', // #FBBF24
               },
             ]}
           >
@@ -82,7 +83,7 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, currentTaskId, onTaskPress }
                 <Text
                   style={[
                     styles.taskTitle,
-                    { color: isDark ? colors.dark.text : colors.light.text },
+                    { color: theme.text },
                     (task.isDone || task.isSkipped || task.isMissed) && styles.completedText,
                   ]}
                 >
@@ -92,7 +93,7 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, currentTaskId, onTaskPress }
                   <Text
                     style={[
                       styles.taskDescription,
-                      { color: isDark ? colors.dark.textSecondary : colors.light.textSecondary },
+                      { color: theme.textSecondary },
                     ]}
                     numberOfLines={2}
                   >
@@ -103,7 +104,7 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, currentTaskId, onTaskPress }
                   <Text
                     style={[
                       styles.tapToReopen,
-                      { color: '#FF9800' },
+                      { color: colors.dark.warning }, // #FBBF24
                     ]}
                   >
                     Tap to reopen
@@ -114,7 +115,7 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, currentTaskId, onTaskPress }
                 <Text
                   style={[
                     styles.taskTime,
-                    { color: isDark ? colors.dark.textSecondary : colors.light.textSecondary },
+                    { color: theme.textSecondary },
                   ]}
                 >
                   {task.dueHour}:00
