@@ -20,6 +20,7 @@ const HomeScreen = () => {
     completeCurrentTask, 
     skipCurrentTask, 
     missCurrentTask,
+    reopenTask,
     nextTask, 
     prevTask, 
     editTaskTitle,
@@ -76,11 +77,11 @@ const HomeScreen = () => {
 
   if (loading || !state) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: isDark ? colors.backgroundDark : colors.backgroundLight }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: isDark ? colors.dark.background : colors.light.background }]}>
         <Stack.Screen options={{ headerShown: false }} />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={isDark ? colors.primaryDark : colors.primaryLight} />
-          <Text style={[styles.loadingText, { color: isDark ? colors.textDark : colors.textLight }]}>
+          <ActivityIndicator size="large" color={isDark ? colors.dark.primary : colors.light.primary} />
+          <Text style={[styles.loadingText, { color: isDark ? colors.dark.text : colors.light.text }]}>
             Loading your progress...
           </Text>
         </View>
@@ -92,7 +93,7 @@ const HomeScreen = () => {
   const currentTask = pendingTasks[0]; // Always show the first pending task
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? colors.backgroundDark : colors.backgroundLight }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? colors.dark.background : colors.light.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -100,7 +101,7 @@ const HomeScreen = () => {
           <RefreshControl
             refreshing={loading}
             onRefresh={refreshState}
-            tintColor={isDark ? colors.primaryDark : colors.primaryLight}
+            tintColor={isDark ? colors.dark.primary : colors.light.primary}
           />
         }
       >
@@ -134,7 +135,7 @@ const HomeScreen = () => {
               { backgroundColor: isDark ? colors.dark.card : colors.light.card }
             ]}
           >
-            <Text style={[styles.noTasksText, { color: isDark ? colors.textDark : colors.textLight }]}>
+            <Text style={[styles.noTasksText, { color: isDark ? colors.dark.text : colors.light.text }]}>
               🎉 All tasks completed!
             </Text>
             <Text style={[styles.noTasksSubtext, { color: isDark ? colors.dark.textSecondary : colors.light.textSecondary }]}>
@@ -145,10 +146,18 @@ const HomeScreen = () => {
 
         {/* Task List Overview */}
         <View style={styles.taskListContainer}>
-          <Text style={[styles.sectionTitle, { color: isDark ? colors.textDark : colors.textLight }]}>
+          <Text style={[styles.sectionTitle, { color: isDark ? colors.dark.text : colors.light.text }]}>
             Today&apos;s Tasks
           </Text>
-          <TaskList tasks={sortedTodayTasks} currentTaskId={currentTask?.id || ''} />
+          <TaskList 
+            tasks={sortedTodayTasks} 
+            currentTaskId={currentTask?.id || ''} 
+            onTaskPress={(task) => {
+              if (task.isSkipped) {
+                reopenTask(task.id);
+              }
+            }}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -169,7 +178,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: spacing.md,
-    fontSize: typography.md,
+    fontSize: typography.body.fontSize,
   },
   noTasksCard: {
     padding: spacing.xl,
@@ -179,13 +188,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   noTasksText: {
-    fontSize: typography.xl,
+    fontSize: typography.h3.fontSize,
     fontWeight: '700',
     marginBottom: spacing.sm,
     textAlign: 'center',
   },
   noTasksSubtext: {
-    fontSize: typography.md,
+    fontSize: typography.body.fontSize,
     textAlign: 'center',
   },
   taskListContainer: {
@@ -193,7 +202,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   sectionTitle: {
-    fontSize: typography.xl,
+    fontSize: typography.h3.fontSize,
     fontWeight: '700',
     marginBottom: spacing.md,
   },

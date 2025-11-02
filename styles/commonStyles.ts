@@ -1,7 +1,7 @@
 
 import { StyleSheet, ViewStyle, TextStyle } from 'react-native';
 
-// PetProgress Color Palette - Bright-Trust (Dark) theme
+// PetProgress Color Palette - Enhanced contrast for dark mode
 export const colors = {
   // Light mode (keeping for compatibility, but app is primarily dark)
   light: {
@@ -20,12 +20,12 @@ export const colors = {
     shadow: 'rgba(96, 165, 250, 0.15)',
     reward: '#34D399',
   },
-  // Dark mode - Bright-Trust (Dark) palette
+  // Dark mode - Enhanced contrast for better readability
   dark: {
-    background: '#0B1220',
-    card: '#121826',
-    text: '#FFFFFF',
-    textSecondary: '#A8B1C7',
+    background: '#000000',        // Pure black for maximum contrast
+    card: '#1A1A1A',              // Dark gray for cards
+    text: '#FFFFFF',              // Pure white for text
+    textSecondary: '#B8B8B8',     // Lighter gray for secondary text (better contrast)
     primary: '#60A5FA',
     primaryDark: '#3B82F6',
     secondary: '#22D3EE',
@@ -33,8 +33,8 @@ export const colors = {
     success: '#34D399',
     warning: '#FBBF24',
     error: '#F87171',
-    border: '#1F2937',
-    shadow: 'rgba(0, 0, 0, 0.3)',
+    border: '#2A2A2A',            // Slightly lighter border
+    shadow: 'rgba(0, 0, 0, 0.5)',
     reward: '#22C55E',
   },
 };

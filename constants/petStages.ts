@@ -1,7 +1,9 @@
 
 import { PetStage } from '@/types';
 
-// 30-stage progression as specified
+// 30-stage progression with 75% harder thresholds
+// Formula: Each stage requires 75% more XP than the previous stage
+// Starting from 10 XP for stage 1, each subsequent stage = previous * 1.75
 export const PET_STAGES: PetStage[] = [
   {
     index: 0,
@@ -20,206 +22,207 @@ export const PET_STAGES: PetStage[] = [
   {
     index: 2,
     name: 'Weasel',
-    minXP: 25,
+    minXP: 28,
     image: '🦡',
     color: '#8B7355',
   },
   {
     index: 3,
     name: 'Badger',
-    minXP: 45,
+    minXP: 58,
     image: '🦡',
     color: '#696969',
   },
   {
     index: 4,
     name: 'Hawk',
-    minXP: 70,
+    minXP: 111,
     image: '🦅',
     color: '#8B4513',
   },
   {
     index: 5,
     name: 'Barracuda',
-    minXP: 100,
+    minXP: 204,
     image: '🐟',
     color: '#4682B4',
   },
   {
     index: 6,
     name: 'Coyote',
-    minXP: 135,
+    minXP: 367,
     image: '🐺',
     color: '#D2B48C',
   },
   {
     index: 7,
     name: 'Wild Boar',
-    minXP: 175,
+    minXP: 652,
     image: '🐗',
     color: '#8B4513',
   },
   {
     index: 8,
     name: 'Wolf',
-    minXP: 220,
+    minXP: 1151,
     image: '🐺',
     color: '#708090',
   },
   {
     index: 9,
     name: 'Crocodile',
-    minXP: 270,
+    minXP: 2024,
     image: '🐊',
     color: '#556B2F',
   },
   {
     index: 10,
     name: 'Mako Shark',
-    minXP: 325,
+    minXP: 3552,
     image: '🦈',
     color: '#4682B4',
   },
   {
     index: 11,
     name: 'Great White Shark',
-    minXP: 385,
+    minXP: 6226,
     image: '🦈',
     color: '#708090',
   },
   {
     index: 12,
     name: 'Orca',
-    minXP: 450,
+    minXP: 10906,
     image: '🐋',
     color: '#2F4F4F',
   },
   {
     index: 13,
     name: 'Bison',
-    minXP: 520,
+    minXP: 19096,
     image: '🦬',
     color: '#8B4513',
   },
   {
     index: 14,
     name: 'Bull',
-    minXP: 595,
+    minXP: 33418,
     image: '🐂',
     color: '#A0522D',
   },
   {
     index: 15,
     name: 'Stallion',
-    minXP: 675,
+    minXP: 58482,
     image: '🐴',
     color: '#8B4513',
   },
   {
     index: 16,
     name: 'Grizzly Bear',
-    minXP: 760,
+    minXP: 102344,
     image: '🐻',
     color: '#8B4513',
   },
   {
     index: 17,
     name: 'Polar Bear',
-    minXP: 850,
+    minXP: 179102,
     image: '🐻‍❄️',
     color: '#F0F8FF',
   },
   {
     index: 18,
     name: 'Rhinoceros',
-    minXP: 945,
+    minXP: 313429,
     image: '🦏',
     color: '#696969',
   },
   {
     index: 19,
     name: 'Hippopotamus',
-    minXP: 1045,
+    minXP: 548501,
     image: '🦛',
     color: '#708090',
   },
   {
     index: 20,
     name: 'Elephant',
-    minXP: 1150,
+    minXP: 959877,
     image: '🐘',
     color: '#808080',
   },
   {
     index: 21,
     name: 'Silver Back Gorilla',
-    minXP: 1260,
+    minXP: 1679785,
     image: '🦍',
     color: '#2F4F4F',
   },
   {
     index: 22,
     name: 'Cape Buffalo',
-    minXP: 1375,
+    minXP: 2939624,
     image: '🐃',
     color: '#2F4F4F',
   },
   {
     index: 23,
     name: 'Lion',
-    minXP: 1495,
+    minXP: 5144342,
     image: '🦁',
     color: '#DAA520',
   },
   {
     index: 24,
     name: 'Komodo Dragon',
-    minXP: 1620,
+    minXP: 9002598,
     image: '🦎',
     color: '#556B2F',
   },
   {
     index: 25,
     name: 'Eagle',
-    minXP: 1750,
+    minXP: 15754547,
     image: '🦅',
     color: '#8B4513',
   },
   {
     index: 26,
     name: 'Phoenix',
-    minXP: 1885,
+    minXP: 27570457,
     image: '🔥',
     color: '#FF4500',
   },
   {
     index: 27,
     name: 'Dragon',
-    minXP: 2025,
+    minXP: 48248300,
     image: '🐉',
     color: '#8B0000',
   },
   {
     index: 28,
     name: 'Human CEO',
-    minXP: 2170,
+    minXP: 84434525,
     image: '👔',
     color: '#4169E1',
   },
   {
     index: 29,
     name: 'Golden CEO',
-    minXP: 2320,
+    minXP: 147760419,
     image: '👑',
     color: '#FFD700',
   },
 ];
 
-// XP thresholds as specified
+// XP thresholds with 75% harder progression
+// Each stage requires 75% more XP than the previous stage
 export const XP_THRESHOLDS = [
-  0, 10, 25, 45, 70, 100, 135, 175, 220, 270,
-  325, 385, 450, 520, 595, 675, 760, 850, 945, 1045,
-  1150, 1260, 1375, 1495, 1620, 1750, 1885, 2025, 2170, 2320
+  0, 10, 28, 58, 111, 204, 367, 652, 1151, 2024,
+  3552, 6226, 10906, 19096, 33418, 58482, 102344, 179102, 313429, 548501,
+  959877, 1679785, 2939624, 5144342, 9002598, 15754547, 27570457, 48248300, 84434525, 147760419
 ];
 
 export const XP_PER_TASK = 10; // Default gain per completion

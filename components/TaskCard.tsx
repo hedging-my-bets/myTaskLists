@@ -15,6 +15,7 @@ interface TaskCardProps {
   onNext: () => void;
   onEditTitle: (newTitle: string) => void;
   onEditDescription?: (newDescription: string) => void;
+  onReopenTask?: () => void;
   taskNumber: number;
   totalTasks: number;
 }
@@ -28,6 +29,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onNext,
   onEditTitle,
   onEditDescription,
+  onReopenTask,
   taskNumber,
   totalTasks,
 }) => {

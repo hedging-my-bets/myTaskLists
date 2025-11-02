@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, useColorScheme } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, useColorScheme, TouchableOpacity } from 'react-native';
 import { colors, spacing, borderRadius, typography } from '@/styles/commonStyles';
 import { Task } from '@/types';
 import Animated, { FadeInDown, Layout } from 'react-native-reanimated';
@@ -8,9 +8,10 @@ import Animated, { FadeInDown, Layout } from 'react-native-reanimated';
 interface TaskListProps {
   tasks: Task[];
   currentTaskId: string;
+  onTaskPress?: (task: Task) => void;
 }
 
-const TaskList: React.FC<TaskListProps> = ({ tasks, currentTaskId }) => {
+const TaskList: React.FC<TaskListProps> = ({ tasks, currentTaskId, onTaskPress }) => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 
@@ -38,65 +39,90 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, currentTaskId }) => {
     return isDark ? colors.dark.card : colors.light.card;
   };
 
+  const handleTaskPress = (task: Task) => {
+    // Allow reopening skipped tasks
+    if (task.isSkipped && onTaskPress) {
+      onTaskPress(task);
+    }
+  };
+
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {tasks.map((task, index) => (
-        <Animated.View
+        <TouchableOpacity
           key={task.id}
-          entering={FadeInDown.delay(index * 50).duration(300)}
-          layout={Layout.springify().damping(15).stiffness(100)}
-          style={[
-            styles.taskItem,
-            {
-              backgroundColor: getTaskBackgroundColor(task),
-              borderLeftWidth: task.id === currentTaskId ? 4 : 0,
-              borderLeftColor: isDark ? colors.dark.primary : colors.light.primary,
-            },
-          ]}
+          onPress={() => handleTaskPress(task)}
+          activeOpacity={task.isSkipped ? 0.7 : 1}
+          disabled={!task.isSkipped}
         >
-          <View style={styles.taskHeader}>
-            <Text
-              style={[
-                styles.statusIcon,
-                { color: getStatusColor(task) },
-              ]}
-            >
-              {getStatusIcon(task)}
-            </Text>
-            <View style={styles.taskContent}>
+          <Animated.View
+            entering={FadeInDown.delay(index * 50).duration(300)}
+            layout={Layout.springify().damping(15).stiffness(100)}
+            style={[
+              styles.taskItem,
+              {
+                backgroundColor: getTaskBackgroundColor(task),
+                borderLeftWidth: task.id === currentTaskId ? 4 : 0,
+                borderLeftColor: isDark ? colors.dark.primary : colors.light.primary,
+                borderWidth: task.isSkipped ? 2 : 0,
+                borderColor: task.isSkipped ? '#FF9800' : 'transparent',
+              },
+            ]}
+          >
+            <View style={styles.taskHeader}>
               <Text
                 style={[
-                  styles.taskTitle,
-                  { color: isDark ? colors.dark.text : colors.light.text },
-                  (task.isDone || task.isSkipped || task.isMissed) && styles.completedText,
+                  styles.statusIcon,
+                  { color: getStatusColor(task) },
                 ]}
               >
-                {task.title}
+                {getStatusIcon(task)}
               </Text>
-              {task.description && (
+              <View style={styles.taskContent}>
                 <Text
                   style={[
-                    styles.taskDescription,
+                    styles.taskTitle,
+                    { color: isDark ? colors.dark.text : colors.light.text },
+                    (task.isDone || task.isSkipped || task.isMissed) && styles.completedText,
+                  ]}
+                >
+                  {task.title}
+                </Text>
+                {task.description && (
+                  <Text
+                    style={[
+                      styles.taskDescription,
+                      { color: isDark ? colors.dark.textSecondary : colors.light.textSecondary },
+                    ]}
+                    numberOfLines={2}
+                  >
+                    {task.description}
+                  </Text>
+                )}
+                {task.isSkipped && (
+                  <Text
+                    style={[
+                      styles.tapToReopen,
+                      { color: '#FF9800' },
+                    ]}
+                  >
+                    Tap to reopen
+                  </Text>
+                )}
+              </View>
+              {!task.isAnytime && (
+                <Text
+                  style={[
+                    styles.taskTime,
                     { color: isDark ? colors.dark.textSecondary : colors.light.textSecondary },
                   ]}
-                  numberOfLines={2}
                 >
-                  {task.description}
+                  {task.dueHour}:00
                 </Text>
               )}
             </View>
-            {!task.isAnytime && (
-              <Text
-                style={[
-                  styles.taskTime,
-                  { color: isDark ? colors.dark.textSecondary : colors.light.textSecondary },
-                ]}
-              >
-                {task.dueHour}:00
-              </Text>
-            )}
-          </View>
-        </Animated.View>
+          </Animated.View>
+        </TouchableOpacity>
       ))}
     </ScrollView>
   );
@@ -125,20 +151,26 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   taskTitle: {
-    fontSize: typography.md,
+    fontSize: typography.body.fontSize,
     fontWeight: '600',
     marginBottom: spacing.xs,
   },
   taskDescription: {
-    fontSize: typography.sm,
+    fontSize: typography.bodySmall.fontSize,
     lineHeight: 18,
   },
   completedText: {
     opacity: 0.6,
   },
   taskTime: {
-    fontSize: typography.sm,
+    fontSize: typography.bodySmall.fontSize,
     fontWeight: '500',
+  },
+  tapToReopen: {
+    fontSize: typography.caption.fontSize,
+    fontWeight: '600',
+    marginTop: spacing.xs,
+    fontStyle: 'italic',
   },
 });
 

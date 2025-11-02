@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { AppState, TaskTemplate } from '@/types';
+import { AppState, TaskTemplate, Task } from '@/types';
 import { loadAppState, saveAppState, getTodayKey, generateTasksFromTemplates } from '@/utils/storage';
 import { shouldRollover, performRollover, getNearestTaskIndex, updateTaskTitle, updateTaskDescription } from '@/utils/taskLogic';
 import { completeTask, missTask } from '@/utils/petLogic';
@@ -174,6 +174,23 @@ export const useAppState = () => {
     await requestWidgetReload();
   }, [state, updateState]);
 
+  const reopenTask = useCallback(async (taskId: string) => {
+    if (!state) return;
+    
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    
+    const updatedTasks = state.tasks.map(t => 
+      t.id === taskId ? { ...t, isSkipped: false, isDone: false, isMissed: false } : t
+    );
+    
+    await updateState({
+      ...state,
+      tasks: updatedTasks,
+    });
+    
+    await requestWidgetReload();
+  }, [state, updateState]);
+
   const nextTask = useCallback(async () => {
     if (!state) return;
     
@@ -315,6 +332,7 @@ export const useAppState = () => {
     completeCurrentTask,
     skipCurrentTask,
     missCurrentTask,
+    reopenTask,
     nextTask,
     prevTask,
     updateGraceMinutes,
