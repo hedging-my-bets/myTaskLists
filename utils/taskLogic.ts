@@ -1,11 +1,11 @@
 
 import { Task, AppState, Settings } from '@/types';
 import { getTodayKey, getCurrentHour, getDefaultTasks } from './storage';
+import { getActiveHour, isWithinGracePeriod } from './timeline';
 
 export const getNearestTaskIndex = (tasks: Task[], graceMinutes: number): number => {
   const now = new Date();
-  const currentHour = now.getHours();
-  const currentMinutes = now.getMinutes();
+  const activeHour = getActiveHour(now, graceMinutes);
   
   // Find tasks for today
   const todayKey = getTodayKey();
@@ -25,16 +25,19 @@ export const getNearestTaskIndex = (tasks: Task[], graceMinutes: number): number
   
   timeSpecificTasks.forEach((task, index) => {
     const taskHour = task.dueHour;
-    let diff = 0;
     
-    if (taskHour === currentHour) {
-      diff = 0; // Current hour
-    } else if (taskHour === currentHour - 1 && currentMinutes < graceMinutes) {
-      diff = 0; // Previous hour within grace period
-    } else if (taskHour < currentHour) {
-      diff = currentHour - taskHour; // Past task
+    // Check if task is within grace period
+    if (isWithinGracePeriod(now, taskHour, graceMinutes)) {
+      nearestIndex = todayTasks.indexOf(task);
+      minDiff = 0;
+      return;
+    }
+    
+    let diff = 0;
+    if (taskHour < activeHour) {
+      diff = activeHour - taskHour; // Past task
     } else {
-      diff = taskHour - currentHour; // Future task
+      diff = taskHour - activeHour; // Future task
     }
     
     if (diff < minDiff) {
@@ -87,9 +90,10 @@ export const performRollover = (state: AppState): AppState => {
   // Create new tasks for today
   const newTasks = getDefaultTasks(today);
   
-  // Apply XP penalty
+  // Apply XP penalty using the new level-scaled penalty
   const { penalizeMissedTasks } = require('./petLogic');
-  const newPetState = penalizeMissedTasks(state.petState, missedCount);
+  const { XP_PER_TASK } = require('@/constants/petStages');
+  const newPetState = penalizeMissedTasks(state.petState, missedCount, XP_PER_TASK);
   
   return {
     ...state,

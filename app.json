@@ -26,7 +26,21 @@
         "backgroundColor": "#8B7FD6"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.petprogress.app"
+      "package": "com.petprogress.app",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "petprogress"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
     },
     "web": {
       "favicon": "./assets/images/final_quest_240x240.png",

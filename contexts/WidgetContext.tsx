@@ -1,43 +1,55 @@
-import * as React from "react";
-import { createContext, useCallback, useContext } from "react";
-import { ExtensionStorage } from "@bacons/apple-targets";
 
-// Initialize storage with your group ID
-const storage = new ExtensionStorage(
-  "group.com.<user_name>.<app_name>"
-);
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { AppState as RNAppState } from 'react-native';
+import { loadWidgetState, saveWidgetState, WidgetState } from '@/shared/WidgetStateStore';
 
-type WidgetContextType = {
-  refreshWidget: () => void;
-};
+interface WidgetContextType {
+  widgetState: WidgetState | null;
+  updateWidgetState: (state: WidgetState) => Promise<void>;
+  refreshWidgetState: () => Promise<void>;
+}
 
-const WidgetContext = createContext<WidgetContextType | null>(null);
+const WidgetContext = createContext<WidgetContextType | undefined>(undefined);
 
-export function WidgetProvider({ children }: { children: React.ReactNode }) {
-  // Update widget state whenever what we want to show changes
-  React.useEffect(() => {
-    // set widget_state to null if we want to reset the widget
-    // storage.set("widget_state", null);
+export const WidgetProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [widgetState, setWidgetState] = useState<WidgetState | null>(null);
 
-    // Refresh widget
-    ExtensionStorage.reloadWidget();
+  useEffect(() => {
+    refreshWidgetState();
+
+    // Listen for app state changes to refresh widget state
+    const subscription = RNAppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        refreshWidgetState();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
   }, []);
 
-  const refreshWidget = useCallback(() => {
-    ExtensionStorage.reloadWidget();
-  }, []);
+  const refreshWidgetState = async () => {
+    const state = await loadWidgetState();
+    setWidgetState(state);
+  };
+
+  const updateWidgetState = async (state: WidgetState) => {
+    await saveWidgetState(state);
+    setWidgetState(state);
+  };
 
   return (
-    <WidgetContext.Provider value={{ refreshWidget }}>
+    <WidgetContext.Provider value={{ widgetState, updateWidgetState, refreshWidgetState }}>
       {children}
     </WidgetContext.Provider>
   );
-}
+};
 
 export const useWidget = () => {
   const context = useContext(WidgetContext);
   if (!context) {
-    throw new Error("useWidget must be used within a WidgetProvider");
+    throw new Error('useWidget must be used within a WidgetProvider');
   }
   return context;
 };

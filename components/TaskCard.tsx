@@ -1,15 +1,16 @@
 
+import { colors, spacing, borderRadius, typography } from '@/styles/commonStyles';
+import Animated, { FadeIn, SlideInRight } from 'react-native-reanimated';
+import { IconSymbol } from './IconSymbol';
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, useColorScheme, TextInput, Alert } from 'react-native';
-import Animated, { FadeIn, SlideInRight } from 'react-native-reanimated';
 import { Task } from '@/types';
-import { colors, spacing, borderRadius, typography } from '@/styles/commonStyles';
-import { IconSymbol } from './IconSymbol';
 
 interface TaskCardProps {
   task: Task;
   onComplete: () => void;
   onSkip: () => void;
+  onMiss: () => void;
   onPrev: () => void;
   onNext: () => void;
   onEditTitle: (newTitle: string) => void;
@@ -17,165 +18,186 @@ interface TaskCardProps {
   totalTasks: number;
 }
 
-export default function TaskCard({
+const TaskCard: React.FC<TaskCardProps> = ({
   task,
   onComplete,
   onSkip,
+  onMiss,
   onPrev,
   onNext,
   onEditTitle,
   taskNumber,
   totalTasks,
-}: TaskCardProps) {
+}) => {
   const colorScheme = useColorScheme();
-  const theme = colorScheme === 'dark' ? colors.dark : colors.light;
+  const isDark = colorScheme === 'dark';
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(task.title);
 
   const handleSaveTitle = () => {
-    if (editedTitle.trim()) {
+    if (editedTitle.trim() && editedTitle !== task.title) {
       onEditTitle(editedTitle.trim());
-      setIsEditing(false);
-    } else {
-      Alert.alert('Error', 'Task title cannot be empty');
     }
+    setIsEditing(false);
   };
 
   const getStatusIcon = () => {
-    if (task.isDone) return '✓';
-    if (task.isSkipped) return '⊘';
-    if (task.isMissed) return '✕';
-    return '○';
+    if (task.isDone) return 'checkmark.circle.fill';
+    if (task.isSkipped) return 'arrow.right.circle.fill';
+    if (task.isMissed) return 'xmark.circle.fill';
+    return 'circle';
   };
 
   const getStatusColor = () => {
-    if (task.isDone) return theme.success;
-    if (task.isSkipped) return theme.warning;
-    if (task.isMissed) return theme.error;
-    return theme.textSecondary;
+    if (task.isDone) return '#4CAF50';
+    if (task.isSkipped) return '#FF9800';
+    if (task.isMissed) return '#F44336';
+    return isDark ? colors.textDark : colors.textLight;
   };
 
   return (
-    <Animated.View 
-      entering={SlideInRight.duration(400)}
-      style={[styles.container, { backgroundColor: theme.card }]}
+    <Animated.View
+      entering={SlideInRight.duration(300)}
+      style={[
+        styles.container,
+        { backgroundColor: isDark ? colors.cardDark : colors.cardLight },
+      ]}
     >
+      {/* Header with task number and hour */}
       <View style={styles.header}>
-        <View style={styles.timeContainer}>
-          <Text style={[styles.hourBadge, { color: theme.primary }]}>
-            {task.dueHour}:00
-          </Text>
-          <Text style={[styles.taskCounter, { color: theme.textSecondary }]}>
-            {taskNumber} / {totalTasks}
-          </Text>
-        </View>
-        
-        <View style={[styles.statusBadge, { backgroundColor: getStatusColor() + '20' }]}>
-          <Text style={[styles.statusIcon, { color: getStatusColor() }]}>
-            {getStatusIcon()}
-          </Text>
-        </View>
+        <Text style={[styles.taskNumber, { color: isDark ? colors.textDark : colors.textLight }]}>
+          Task {taskNumber} of {totalTasks}
+        </Text>
+        {!task.isAnytime && (
+          <View style={[styles.hourBadge, { backgroundColor: isDark ? colors.primaryDark : colors.primaryLight }]}>
+            <Text style={styles.hourText}>{task.dueHour}:00</Text>
+          </View>
+        )}
+        {task.isAnytime && (
+          <View style={[styles.hourBadge, { backgroundColor: isDark ? '#555' : '#ddd' }]}>
+            <Text style={styles.hourText}>Anytime</Text>
+          </View>
+        )}
       </View>
 
+      {/* Task title */}
       {isEditing ? (
-        <View style={styles.editContainer}>
-          <TextInput
-            style={[styles.input, { color: theme.text, borderColor: theme.border }]}
-            value={editedTitle}
-            onChangeText={setEditedTitle}
-            autoFocus
-            onSubmitEditing={handleSaveTitle}
-            placeholder="Task title"
-            placeholderTextColor={theme.textSecondary}
-          />
-          <View style={styles.editButtons}>
-            <TouchableOpacity 
-              onPress={handleSaveTitle}
-              style={[styles.editButton, { backgroundColor: theme.success }]}
-            >
-              <Text style={styles.editButtonText}>Save</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              onPress={() => {
-                setEditedTitle(task.title);
-                setIsEditing(false);
-              }}
-              style={[styles.editButton, { backgroundColor: theme.textSecondary }]}
-            >
-              <Text style={styles.editButtonText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        <TextInput
+          style={[
+            styles.titleInput,
+            {
+              color: isDark ? colors.textDark : colors.textLight,
+              backgroundColor: isDark ? '#333' : '#f5f5f5',
+            },
+          ]}
+          value={editedTitle}
+          onChangeText={setEditedTitle}
+          onBlur={handleSaveTitle}
+          onSubmitEditing={handleSaveTitle}
+          autoFocus
+          multiline
+        />
       ) : (
-        <TouchableOpacity 
-          onLongPress={() => setIsEditing(true)}
-          activeOpacity={0.7}
-        >
-          <Text style={[styles.title, { color: theme.text }]}>
+        <TouchableOpacity onPress={() => setIsEditing(true)} activeOpacity={0.7}>
+          <Text style={[styles.title, { color: isDark ? colors.textDark : colors.textLight }]}>
             {task.title}
-          </Text>
-          <Text style={[styles.hint, { color: theme.textSecondary }]}>
-            Long press to edit
           </Text>
         </TouchableOpacity>
       )}
 
+      {/* Status indicator */}
+      <View style={styles.statusContainer}>
+        <IconSymbol name={getStatusIcon()} size={24} color={getStatusColor()} />
+        <Text style={[styles.statusText, { color: getStatusColor() }]}>
+          {task.isDone && 'Completed'}
+          {task.isSkipped && 'Skipped'}
+          {task.isMissed && 'Missed'}
+          {!task.isDone && !task.isSkipped && !task.isMissed && 'Pending'}
+        </Text>
+      </View>
+
+      {/* Action buttons */}
       <View style={styles.actions}>
-        <TouchableOpacity 
+        {/* Previous button */}
+        <TouchableOpacity
+          style={[styles.actionButton, { backgroundColor: isDark ? '#444' : '#e0e0e0' }]}
           onPress={onPrev}
-          style={[styles.actionButton, { backgroundColor: theme.accent }]}
         >
-          <IconSymbol name="chevron.left" size={24} color={theme.primary} />
+          <IconSymbol name="chevron.left" size={24} color={isDark ? colors.textDark : colors.textLight} />
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          onPress={onComplete}
-          disabled={task.isDone}
-          style={[
-            styles.actionButton, 
-            styles.primaryButton,
-            { backgroundColor: task.isDone ? theme.border : theme.success }
-          ]}
-        >
-          <IconSymbol 
-            name="checkmark" 
-            size={28} 
-            color={task.isDone ? theme.textSecondary : '#FFFFFF'} 
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          onPress={onSkip}
-          disabled={task.isSkipped}
+        {/* Complete button */}
+        <TouchableOpacity
           style={[
             styles.actionButton,
-            { backgroundColor: task.isSkipped ? theme.border : theme.warning }
+            styles.primaryButton,
+            { backgroundColor: task.isDone ? '#4CAF50' : (isDark ? colors.primaryDark : colors.primaryLight) },
           ]}
+          onPress={onComplete}
+          disabled={task.isDone}
         >
-          <IconSymbol 
-            name="xmark" 
-            size={24} 
-            color={task.isSkipped ? theme.textSecondary : '#FFFFFF'} 
-          />
+          <IconSymbol name="checkmark" size={28} color="#fff" />
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          onPress={onNext}
-          style={[styles.actionButton, { backgroundColor: theme.accent }]}
+        {/* Miss button */}
+        <TouchableOpacity
+          style={[
+            styles.actionButton,
+            { backgroundColor: task.isMissed ? '#F44336' : (isDark ? '#5a2a2a' : '#ffebee') },
+          ]}
+          onPress={() => {
+            Alert.alert(
+              'Mark as Missed',
+              'This will deduct XP from your pet. Are you sure?',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Miss', style: 'destructive', onPress: onMiss },
+              ]
+            );
+          }}
+          disabled={task.isMissed}
         >
-          <IconSymbol name="chevron.right" size={24} color={theme.primary} />
+          <IconSymbol name="xmark" size={28} color={task.isMissed ? '#fff' : '#F44336'} />
+        </TouchableOpacity>
+
+        {/* Skip button */}
+        <TouchableOpacity
+          style={[
+            styles.actionButton,
+            { backgroundColor: task.isSkipped ? '#FF9800' : (isDark ? '#4a3a1a' : '#fff3e0') },
+          ]}
+          onPress={onSkip}
+          disabled={task.isSkipped}
+        >
+          <IconSymbol name="arrow.right" size={28} color={task.isSkipped ? '#fff' : '#FF9800'} />
+        </TouchableOpacity>
+
+        {/* Next button */}
+        <TouchableOpacity
+          style={[styles.actionButton, { backgroundColor: isDark ? '#444' : '#e0e0e0' }]}
+          onPress={onNext}
+        >
+          <IconSymbol name="chevron.right" size={24} color={isDark ? colors.textDark : colors.textLight} />
         </TouchableOpacity>
       </View>
     </Animated.View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     padding: spacing.lg,
-    borderRadius: borderRadius.xl,
-    boxShadow: '0px 4px 12px rgba(139, 127, 214, 0.15)',
-    elevation: 4,
+    borderRadius: borderRadius.lg,
+    marginHorizontal: spacing.md,
+    marginVertical: spacing.sm,
+    ...Platform.select({
+      ios: {
+        boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
   },
   header: {
     flexDirection: 'row',
@@ -183,61 +205,42 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.md,
   },
-  timeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
+  taskNumber: {
+    fontSize: typography.sm,
+    fontWeight: '600',
   },
   hourBadge: {
-    ...typography.h3,
-    fontWeight: '700',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.md,
   },
-  taskCounter: {
-    ...typography.bodySmall,
-  },
-  statusBadge: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.full,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  statusIcon: {
-    fontSize: 20,
+  hourText: {
+    color: '#fff',
+    fontSize: typography.sm,
     fontWeight: '700',
   },
   title: {
-    ...typography.h3,
-    marginBottom: spacing.xs,
+    fontSize: typography.xl,
+    fontWeight: '600',
+    marginBottom: spacing.md,
+    lineHeight: 28,
   },
-  hint: {
-    ...typography.caption,
-    fontStyle: 'italic',
-    marginBottom: spacing.lg,
-  },
-  editContainer: {
-    marginBottom: spacing.lg,
-  },
-  input: {
-    ...typography.body,
-    borderWidth: 1,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-  },
-  editButtons: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  editButton: {
-    flex: 1,
+  titleInput: {
+    fontSize: typography.xl,
+    fontWeight: '600',
+    marginBottom: spacing.md,
     padding: spacing.sm,
     borderRadius: borderRadius.md,
-    alignItems: 'center',
+    lineHeight: 28,
   },
-  editButtonText: {
-    ...typography.bodySmall,
-    color: '#FFFFFF',
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  statusText: {
+    marginLeft: spacing.sm,
+    fontSize: typography.md,
     fontWeight: '600',
   },
   actions: {
@@ -247,12 +250,15 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-    aspectRatio: 1,
+    paddingVertical: spacing.md,
     borderRadius: borderRadius.md,
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 50,
   },
   primaryButton: {
     flex: 1.5,
   },
 });
+
+export default TaskCard;
