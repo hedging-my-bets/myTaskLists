@@ -52,14 +52,14 @@ const TaskCard: React.FC<TaskCardProps> = ({
     if (task.isDone) return '#4CAF50'; // Green for completed
     if (task.isSkipped) return '#FF9800';
     if (task.isMissed) return '#F44336';
-    return isDark ? colors.textDark : colors.textLight;
+    return isDark ? colors.dark.text : colors.light.text;
   };
 
   const getCardBackgroundColor = () => {
     if (task.isDone) {
       return isDark ? '#1b3a1b' : '#e8f5e9'; // Green tint for completed
     }
-    return isDark ? colors.cardDark : colors.cardLight;
+    return isDark ? colors.dark.card : colors.light.card;
   };
 
   return (
@@ -72,11 +72,11 @@ const TaskCard: React.FC<TaskCardProps> = ({
     >
       {/* Header with task number and hour */}
       <View style={styles.header}>
-        <Text style={[styles.taskNumber, { color: isDark ? colors.textDark : colors.textLight }]}>
+        <Text style={[styles.taskNumber, { color: isDark ? colors.dark.text : colors.light.text }]}>
           Task {taskNumber} of {totalTasks}
         </Text>
         {!task.isAnytime && (
-          <View style={[styles.hourBadge, { backgroundColor: isDark ? colors.primaryDark : colors.primaryLight }]}>
+          <View style={[styles.hourBadge, { backgroundColor: isDark ? colors.dark.primary : colors.light.primary }]}>
             <Text style={styles.hourText}>{task.dueHour}:00</Text>
           </View>
         )}
@@ -93,7 +93,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
           style={[
             styles.titleInput,
             {
-              color: isDark ? colors.textDark : colors.textLight,
+              color: isDark ? colors.dark.text : colors.light.text,
               backgroundColor: isDark ? '#333' : '#f5f5f5',
             },
           ]}
@@ -106,7 +106,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
         />
       ) : (
         <TouchableOpacity onPress={() => setIsEditing(true)} activeOpacity={0.7}>
-          <Text style={[styles.title, { color: isDark ? colors.textDark : colors.textLight }]}>
+          <Text style={[styles.title, { color: isDark ? colors.dark.text : colors.light.text }]}>
             {task.title}
           </Text>
         </TouchableOpacity>
@@ -130,15 +130,18 @@ const TaskCard: React.FC<TaskCardProps> = ({
           style={[styles.actionButton, { backgroundColor: isDark ? '#444' : '#e0e0e0' }]}
           onPress={onPrev}
         >
-          <IconSymbol name="chevron.left" size={24} color={isDark ? colors.textDark : colors.textLight} />
+          <IconSymbol name="chevron.left" size={24} color={isDark ? colors.dark.text : colors.light.text} />
         </TouchableOpacity>
 
-        {/* Complete button */}
+        {/* Complete button - ALWAYS GREEN */}
         <TouchableOpacity
           style={[
             styles.actionButton,
             styles.primaryButton,
-            { backgroundColor: task.isDone ? '#4CAF50' : (isDark ? colors.primaryDark : colors.primaryLight) },
+            { 
+              backgroundColor: '#4CAF50', // Always green
+              opacity: task.isDone ? 0.6 : 1, // Slightly dimmed when already completed
+            },
           ]}
           onPress={onComplete}
           disabled={task.isDone}
@@ -184,7 +187,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
           style={[styles.actionButton, { backgroundColor: isDark ? '#444' : '#e0e0e0' }]}
           onPress={onNext}
         >
-          <IconSymbol name="chevron.right" size={24} color={isDark ? colors.textDark : colors.textLight} />
+          <IconSymbol name="chevron.right" size={24} color={isDark ? colors.dark.text : colors.light.text} />
         </TouchableOpacity>
       </View>
     </Animated.View>
@@ -219,7 +222,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   taskNumber: {
-    fontSize: typography.sm,
+    fontSize: typography.bodySmall.fontSize,
     fontWeight: '600',
   },
   hourBadge: {
@@ -229,17 +232,17 @@ const styles = StyleSheet.create({
   },
   hourText: {
     color: '#fff',
-    fontSize: typography.sm,
+    fontSize: typography.bodySmall.fontSize,
     fontWeight: '700',
   },
   title: {
-    fontSize: typography.xl,
+    fontSize: typography.h3.fontSize,
     fontWeight: '600',
     marginBottom: spacing.md,
     lineHeight: 28,
   },
   titleInput: {
-    fontSize: typography.xl,
+    fontSize: typography.h3.fontSize,
     fontWeight: '600',
     marginBottom: spacing.md,
     padding: spacing.sm,
@@ -253,7 +256,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     marginLeft: spacing.sm,
-    fontSize: typography.md,
+    fontSize: typography.body.fontSize,
     fontWeight: '600',
   },
   actions: {
