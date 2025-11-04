@@ -4,6 +4,9 @@ import { StyleSheet, ViewStyle, TextStyle } from 'react-native';
 // PetProgress Color Palette - Bright-Trust (Dark)
 // This is the official color system that should be used across ALL components and widgets
 export const colors = {
+  // Primary brand color
+  primary: '#60A5FA',
+  
   // Light mode (keeping for compatibility)
   light: {
     background: '#F8F7FC',
@@ -58,6 +61,7 @@ export const borderRadius = {
 };
 
 export const typography = {
+  // Predefined text styles
   h1: {
     fontSize: 32,
     fontWeight: '700' as const,
@@ -87,6 +91,24 @@ export const typography = {
     fontSize: 12,
     fontWeight: '400' as const,
     lineHeight: 16,
+  },
+  
+  // Font sizes (for backward compatibility and flexibility)
+  sizes: {
+    xs: 12,
+    sm: 14,
+    md: 16,
+    lg: 20,
+    xl: 24,
+    xxl: 32,
+  },
+  
+  // Font weights (for backward compatibility and flexibility)
+  weights: {
+    regular: '400' as const,
+    medium: '500' as const,
+    semibold: '600' as const,
+    bold: '700' as const,
   },
 };
 
