@@ -14,22 +14,25 @@ export const useAppState = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('🚀 [useAppState] Initializing app state...');
     loadState();
   }, []);
 
   // Set up deep link listener
   useEffect(() => {
     const subscription = Linking.addEventListener('url', ({ url }) => {
-      console.log('Deep link received:', url);
+      console.log('🔗 [useAppState] Deep link received:', url);
       if (state) {
         handleDeepLink(url, state, updateState);
+      } else {
+        console.log('⚠️  [useAppState] State not ready, ignoring deep link');
       }
     });
 
     // Check if app was opened with a deep link
     Linking.getInitialURL().then((url) => {
       if (url && state) {
-        console.log('Initial deep link:', url);
+        console.log('🔗 [useAppState] Initial deep link:', url);
         handleDeepLink(url, state, updateState);
       }
     });
@@ -40,21 +43,27 @@ export const useAppState = () => {
   }, [state]);
 
   const loadState = async () => {
+    console.log('📖 [useAppState] Loading state...');
+    
     try {
       let loadedState = await loadAppState();
       
+      console.log('🔍 [useAppState] Checking rollover...');
       // Check if rollover is needed
       if (shouldRollover(loadedState.lastRolloverDate, loadedState.settings.graceMinutes)) {
+        console.log('🔄 [useAppState] Rollover needed, performing...');
         loadedState = performRollover(loadedState);
         await saveAppState(loadedState);
       }
       
       // Update current task index to nearest task
+      console.log('🎯 [useAppState] Finding nearest task...');
       const nearestIndex = getNearestTaskIndex(loadedState.tasks, loadedState.settings.graceMinutes);
       loadedState.currentTaskIndex = nearestIndex;
       
       setState(loadedState);
       
+      console.log('🔄 [useAppState] Syncing widget state...');
       // Sync widget state
       await syncWidgetState(
         loadedState.tasks,
@@ -63,17 +72,26 @@ export const useAppState = () => {
         loadedState.settings,
         loadedState.lastRolloverDate
       );
+      
+      console.log('✅ [useAppState] State loaded and synced successfully');
     } catch (error) {
-      console.error('Error loading state:', error);
+      console.error('❌ [useAppState] Error loading state:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const updateState = useCallback(async (newState: AppState) => {
+    console.log('💾 [useAppState] Updating state...');
+    console.log(`   Tasks: ${newState.tasks.length}`);
+    console.log(`   Pet XP: ${newState.petState.xp}`);
+    console.log(`   Pet Stage: ${newState.petState.stageIndex}`);
+    console.log(`   Current index: ${newState.currentTaskIndex}`);
+    
     setState(newState);
     await saveAppState(newState);
     
+    console.log('🔄 [useAppState] Syncing widget after state update...');
     // Sync widget state after every update
     await syncWidgetState(
       newState.tasks,
@@ -82,21 +100,32 @@ export const useAppState = () => {
       newState.settings,
       newState.lastRolloverDate
     );
+    
+    console.log('✅ [useAppState] State updated and synced');
   }, []);
 
   const completeCurrentTask = useCallback(async () => {
-    if (!state) return;
+    console.log('✅ [useAppState] ========== COMPLETE TASK ==========');
+    
+    if (!state) {
+      console.log('❌ [useAppState] No state available');
+      return;
+    }
     
     const todayKey = getTodayKey();
     const todayTasks = state.tasks.filter(t => t.dayKey === todayKey);
+    
+    console.log(`   Today's tasks: ${todayTasks.length}`);
     
     // Find the first pending task
     const currentTask = todayTasks.find(t => !t.isDone && !t.isSkipped && !t.isMissed);
     
     if (!currentTask) {
-      console.log('No pending task to complete');
+      console.log('⚠️  [useAppState] No pending task to complete');
       return;
     }
+    
+    console.log(`   Completing: "${currentTask.title}" (${currentTask.dueHour >= 0 ? `${currentTask.dueHour}:00` : 'anytime'})`);
     
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     
@@ -104,6 +133,7 @@ export const useAppState = () => {
       t.id === currentTask.id ? { ...t, isDone: true, isSkipped: false, isMissed: false } : t
     );
     
+    console.log('🐾 [useAppState] Calculating XP gain...');
     const newPetState = completeTask(state.petState);
     
     await updateState({
@@ -112,11 +142,19 @@ export const useAppState = () => {
       petState: newPetState,
     });
     
+    console.log('🔄 [useAppState] Requesting widget reload...');
     await requestWidgetReload();
+    
+    console.log('✅ [useAppState] ========== TASK COMPLETED ==========');
   }, [state, updateState]);
 
   const skipCurrentTask = useCallback(async () => {
-    if (!state) return;
+    console.log('⏭️  [useAppState] ========== SKIP TASK ==========');
+    
+    if (!state) {
+      console.log('❌ [useAppState] No state available');
+      return;
+    }
     
     const todayKey = getTodayKey();
     const todayTasks = state.tasks.filter(t => t.dayKey === todayKey);
@@ -125,9 +163,11 @@ export const useAppState = () => {
     const currentTask = todayTasks.find(t => !t.isDone && !t.isSkipped && !t.isMissed);
     
     if (!currentTask) {
-      console.log('No pending task to skip');
+      console.log('⚠️  [useAppState] No pending task to skip');
       return;
     }
+    
+    console.log(`   Skipping: "${currentTask.title}" (${currentTask.dueHour >= 0 ? `${currentTask.dueHour}:00` : 'anytime'})`);
     
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     
@@ -140,11 +180,19 @@ export const useAppState = () => {
       tasks: updatedTasks,
     });
     
+    console.log('🔄 [useAppState] Requesting widget reload...');
     await requestWidgetReload();
+    
+    console.log('✅ [useAppState] ========== TASK SKIPPED ==========');
   }, [state, updateState]);
 
   const missCurrentTask = useCallback(async () => {
-    if (!state) return;
+    console.log('❌ [useAppState] ========== MISS TASK ==========');
+    
+    if (!state) {
+      console.log('❌ [useAppState] No state available');
+      return;
+    }
     
     const todayKey = getTodayKey();
     const todayTasks = state.tasks.filter(t => t.dayKey === todayKey);
@@ -153,9 +201,11 @@ export const useAppState = () => {
     const currentTask = todayTasks.find(t => !t.isDone && !t.isSkipped && !t.isMissed);
     
     if (!currentTask) {
-      console.log('No pending task to miss');
+      console.log('⚠️  [useAppState] No pending task to miss');
       return;
     }
+    
+    console.log(`   Missing: "${currentTask.title}" (${currentTask.dueHour >= 0 ? `${currentTask.dueHour}:00` : 'anytime'})`);
     
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     
@@ -163,6 +213,7 @@ export const useAppState = () => {
       t.id === currentTask.id ? { ...t, isMissed: true, isDone: false, isSkipped: false } : t
     );
     
+    console.log('🐾 [useAppState] Applying XP penalty...');
     const newPetState = missTask(state.petState);
     
     await updateState({
@@ -171,11 +222,19 @@ export const useAppState = () => {
       petState: newPetState,
     });
     
+    console.log('🔄 [useAppState] Requesting widget reload...');
     await requestWidgetReload();
+    
+    console.log('✅ [useAppState] ========== TASK MISSED ==========');
   }, [state, updateState]);
 
   const reopenTask = useCallback(async (taskId: string) => {
-    if (!state) return;
+    console.log(`🔓 [useAppState] Reopening task: ${taskId}`);
+    
+    if (!state) {
+      console.log('❌ [useAppState] No state available');
+      return;
+    }
     
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     
@@ -188,16 +247,26 @@ export const useAppState = () => {
       tasks: updatedTasks,
     });
     
+    console.log('🔄 [useAppState] Requesting widget reload...');
     await requestWidgetReload();
+    
+    console.log('✅ [useAppState] Task reopened');
   }, [state, updateState]);
 
   const nextTask = useCallback(async () => {
-    if (!state) return;
+    console.log('➡️  [useAppState] Moving to next task...');
+    
+    if (!state) {
+      console.log('❌ [useAppState] No state available');
+      return;
+    }
     
     const todayKey = getTodayKey();
     const todayTasks = state.tasks.filter(t => t.dayKey === todayKey);
     const newIndex = (state.currentTaskIndex + 1) % todayTasks.length;
     
+    console.log(`   Index: ${state.currentTaskIndex} → ${newIndex}`);
+    
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     
     await updateState({
@@ -205,16 +274,26 @@ export const useAppState = () => {
       currentTaskIndex: newIndex,
     });
     
+    console.log('🔄 [useAppState] Requesting widget reload...');
     await requestWidgetReload();
+    
+    console.log('✅ [useAppState] Moved to next task');
   }, [state, updateState]);
 
   const prevTask = useCallback(async () => {
-    if (!state) return;
+    console.log('⬅️  [useAppState] Moving to previous task...');
+    
+    if (!state) {
+      console.log('❌ [useAppState] No state available');
+      return;
+    }
     
     const todayKey = getTodayKey();
     const todayTasks = state.tasks.filter(t => t.dayKey === todayKey);
     const newIndex = state.currentTaskIndex === 0 ? todayTasks.length - 1 : state.currentTaskIndex - 1;
     
+    console.log(`   Index: ${state.currentTaskIndex} → ${newIndex}`);
+    
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     
     await updateState({
@@ -222,11 +301,19 @@ export const useAppState = () => {
       currentTaskIndex: newIndex,
     });
     
+    console.log('🔄 [useAppState] Requesting widget reload...');
     await requestWidgetReload();
+    
+    console.log('✅ [useAppState] Moved to previous task');
   }, [state, updateState]);
 
   const updateGraceMinutes = useCallback(async (minutes: number) => {
-    if (!state) return;
+    console.log(`⏰ [useAppState] Updating grace minutes: ${state?.settings.graceMinutes} → ${minutes}`);
+    
+    if (!state) {
+      console.log('❌ [useAppState] No state available');
+      return;
+    }
     
     await updateState({
       ...state,
@@ -236,11 +323,19 @@ export const useAppState = () => {
       },
     });
     
+    console.log('🔄 [useAppState] Requesting widget reload...');
     await requestWidgetReload();
+    
+    console.log('✅ [useAppState] Grace minutes updated');
   }, [state, updateState]);
 
   const editTaskTitle = useCallback(async (taskId: string, newTitle: string) => {
-    if (!state) return;
+    console.log(`✏️  [useAppState] Editing task title: ${taskId}`);
+    
+    if (!state) {
+      console.log('❌ [useAppState] No state available');
+      return;
+    }
     
     const updatedTasks = updateTaskTitle(state.tasks, taskId, newTitle);
     
@@ -249,11 +344,19 @@ export const useAppState = () => {
       tasks: updatedTasks,
     });
     
+    console.log('🔄 [useAppState] Requesting widget reload...');
     await requestWidgetReload();
+    
+    console.log('✅ [useAppState] Task title updated');
   }, [state, updateState]);
 
   const editTaskDescription = useCallback(async (taskId: string, newDescription: string) => {
-    if (!state) return;
+    console.log(`✏️  [useAppState] Editing task description: ${taskId}`);
+    
+    if (!state) {
+      console.log('❌ [useAppState] No state available');
+      return;
+    }
     
     const updatedTasks = updateTaskDescription(state.tasks, taskId, newDescription);
     
@@ -262,22 +365,37 @@ export const useAppState = () => {
       tasks: updatedTasks,
     });
     
+    console.log('🔄 [useAppState] Requesting widget reload...');
     await requestWidgetReload();
+    
+    console.log('✅ [useAppState] Task description updated');
   }, [state, updateState]);
 
   const addTaskTemplate = useCallback(async (template: Omit<TaskTemplate, 'id'>, targetDate?: string) => {
-    if (!state) return;
+    console.log('➕ [useAppState] Adding task template...');
+    console.log(`   Title: "${template.title}"`);
+    console.log(`   Hour: ${template.dueHour >= 0 ? `${template.dueHour}:00` : 'anytime'}`);
+    console.log(`   Recurring: ${template.isRecurring}`);
+    
+    if (!state) {
+      console.log('❌ [useAppState] No state available');
+      return;
+    }
 
     const newTemplate: TaskTemplate = {
       ...template,
       id: `template-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     };
 
+    console.log(`   Template ID: ${newTemplate.id}`);
+
     const updatedTemplates = [...(state.taskTemplates || []), newTemplate];
 
     // Generate tasks for the target date (or today if not specified)
     const taskDate = targetDate || getTodayKey();
     const dayOfWeek = new Date(taskDate).getDay();
+    
+    console.log(`   Target date: ${taskDate} (day ${dayOfWeek})`);
     
     let newTasks = [...state.tasks];
     
@@ -298,6 +416,9 @@ export const useAppState = () => {
         templateId: newTemplate.id,
       };
       newTasks.push(newTask);
+      console.log(`   ✅ Created task for ${taskDate}`);
+    } else {
+      console.log(`   ⏭️  Skipped task creation (not scheduled for day ${dayOfWeek})`);
     }
 
     await updateState({
@@ -306,15 +427,26 @@ export const useAppState = () => {
       tasks: newTasks,
     });
 
+    console.log('🔄 [useAppState] Requesting widget reload...');
     await requestWidgetReload();
+    
+    console.log('✅ [useAppState] Task template added');
   }, [state, updateState]);
 
   const deleteTaskTemplate = useCallback(async (templateId: string) => {
-    if (!state) return;
+    console.log(`🗑️  [useAppState] Deleting task template: ${templateId}`);
+    
+    if (!state) {
+      console.log('❌ [useAppState] No state available');
+      return;
+    }
 
     const updatedTemplates = state.taskTemplates.filter(t => t.id !== templateId);
 
     // Remove all tasks associated with this template
+    const tasksToRemove = state.tasks.filter(t => t.templateId === templateId);
+    console.log(`   Removing ${tasksToRemove.length} associated tasks`);
+    
     const updatedTasks = state.tasks.filter(t => t.templateId !== templateId);
 
     await updateState({
@@ -323,7 +455,10 @@ export const useAppState = () => {
       tasks: updatedTasks,
     });
 
+    console.log('🔄 [useAppState] Requesting widget reload...');
     await requestWidgetReload();
+    
+    console.log('✅ [useAppState] Task template deleted');
   }, [state, updateState]);
 
   return {
