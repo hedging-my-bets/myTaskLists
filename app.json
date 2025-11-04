@@ -52,27 +52,10 @@
       "bundler": "metro"
     },
     "plugins": [
+      "@bacons/apple-targets",
       "expo-font",
       "expo-router",
-      "expo-web-browser",
-      [
-        "@bacons/apple-targets",
-        {
-          "targets": [
-            {
-              "bundleIdentifier": "com.petprogress.app.PetProgressWidget",
-              "targetName": "PetProgressWidget",
-              "type": "widget",
-              "deploymentTarget": "17.0",
-              "entitlements": {
-                "com.apple.security.application-groups": [
-                  "group.com.petprogress.app"
-                ]
-              }
-            }
-          ]
-        }
-      ]
+      "expo-web-browser"
     ],
     "scheme": "petprogress",
     "experiments": {
