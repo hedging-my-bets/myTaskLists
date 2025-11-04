@@ -295,10 +295,39 @@ struct ConfigurationAppIntent: WidgetConfigurationIntent {
 
 // MARK: - Helper Functions
 func getPetEmoji(for stageIndex: Int) -> String {
+    // 31 stages (0-30) matching constants/petStages.ts
     let emojis = [
-        "🥚", "🐔", "🦡", "🦡", "🦅", "🐟", "🐺", "🐗", "🐺", "🐊",
-        "🦈", "🦈", "🐋", "🦬", "🐂", "🐴", "🐻", "🐻‍❄️", "🦏", "🦛",
-        "🐘", "🦍", "🐃", "🦁", "🦎", "🦅", "🔥", "🐉", "👔", "👑"
+        "🥚",      // Stage 0: Egg (0 XP)
+        "🐔",      // Stage 1: Chicken (100 XP)
+        "🦡",      // Stage 2: Weasel (200 XP)
+        "🦡",      // Stage 3: Badger (300 XP)
+        "🦅",      // Stage 4: Hawk (400 XP)
+        "🐟",      // Stage 5: Barracuda (500 XP)
+        "🐺",      // Stage 6: Coyote (600 XP)
+        "🐗",      // Stage 7: Wild Boar (700 XP)
+        "🐺",      // Stage 8: Wolf (800 XP)
+        "🐊",      // Stage 9: Crocodile (900 XP)
+        "🦈",      // Stage 10: Mako Shark (1000 XP)
+        "🦈",      // Stage 11: Great White Shark (1100 XP)
+        "🐋",      // Stage 12: Orca (1200 XP)
+        "🦬",      // Stage 13: Bison (1300 XP)
+        "🐂",      // Stage 14: Bull (1400 XP)
+        "🐴",      // Stage 15: Stallion (1500 XP)
+        "🐻",      // Stage 16: Grizzly Bear (1600 XP)
+        "🐻‍❄️",    // Stage 17: Polar Bear (1700 XP)
+        "🦏",      // Stage 18: Rhinoceros (1800 XP)
+        "🦛",      // Stage 19: Hippopotamus (1900 XP)
+        "🐘",      // Stage 20: Elephant (2000 XP)
+        "🦍",      // Stage 21: Silver Back Gorilla (2100 XP)
+        "🐃",      // Stage 22: Cape Buffalo (2200 XP)
+        "🦁",      // Stage 23: Lion (2300 XP)
+        "🦎",      // Stage 24: Komodo Dragon (2400 XP)
+        "🦅",      // Stage 25: Eagle (2500 XP)
+        "🔥",      // Stage 26: Phoenix (2600 XP)
+        "🐉",      // Stage 27: Dragon (2700 XP)
+        "👔",      // Stage 28: Human CEO (2800 XP)
+        "👑",      // Stage 29: Golden CEO (2900 XP)
+        "⭐"       // Stage 30: Legendary (3000 XP)
     ]
     
     let index = min(max(stageIndex, 0), emojis.count - 1)
