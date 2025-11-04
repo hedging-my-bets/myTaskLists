@@ -14,7 +14,7 @@ PetProgress turns your iPhone Home Screen into a habit control panel. Track hour
 ### 🐣 Pet Evolution System
 - **30 Stages**: Egg → Chicken → ... → Dragon → CEO → Golden CEO
 - **25 XP per Task**: Earn experience by completing tasks
-- **Doubling Progression**: Each level requires double the XP (100, 200, 400, 800...)
+- **Progressive Thresholds**: Steady 100 XP increments per stage (100, 200, 300... 3000)
 - **Level-Scaled Penalties**: Miss penalties scale from 1× to 3× as you level up
 - **Visual Progress**: Watch your pet evolve in real-time
 
@@ -99,20 +99,59 @@ PetProgress turns your iPhone Home Screen into a habit control panel. Track hour
 
 ## 🎯 Pet Stages
 
-| Stage | Name | XP Required |
-|-------|------|-------------|
-| 1 | Egg 🥚 | 0 |
-| 2 | Chicken 🐔 | 100 |
-| 3 | Weasel 🦡 | 200 |
-| 4 | Badger 🦡 | 400 |
-| 5 | Hawk 🦅 | 800 |
-| 10 | Mako Shark 🦈 | 51,200 |
-| 15 | Stallion 🐴 | 1,638,400 |
-| 20 | Elephant 🐘 | 52,428,800 |
-| 25 | Eagle 🦅 | 1,677,721,600 |
-| 28 | Dragon 🐉 | 6,710,886,400 |
-| 29 | Human CEO 👔 | 13,421,772,800 |
-| 30 | Golden CEO 👑 | 26,843,545,600 |
+The pet evolution system uses a **progressive XP model** with 30 stages. Each stage requires 100 more XP than the previous one, creating a steady, predictable climb from Egg to Legendary.
+
+| Stage | Name | XP Required | Tasks Needed* |
+|-------|------|-------------|---------------|
+| 0 | Egg 🥚 | 0 | 0 |
+| 1 | Chicken 🐔 | 100 | 4 |
+| 2 | Weasel 🦡 | 200 | 8 |
+| 3 | Badger 🦡 | 300 | 12 |
+| 4 | Hawk 🦅 | 400 | 16 |
+| 5 | Barracuda 🐟 | 500 | 20 |
+| 6 | Coyote 🐺 | 600 | 24 |
+| 7 | Wild Boar 🐗 | 700 | 28 |
+| 8 | Wolf 🐺 | 800 | 32 |
+| 9 | Crocodile 🐊 | 900 | 36 |
+| 10 | Mako Shark 🦈 | 1,000 | 40 |
+| 11 | Great White Shark 🦈 | 1,100 | 44 |
+| 12 | Orca 🐋 | 1,200 | 48 |
+| 13 | Bison 🦬 | 1,300 | 52 |
+| 14 | Bull 🐂 | 1,400 | 56 |
+| 15 | Stallion 🐴 | 1,500 | 60 |
+| 16 | Grizzly Bear 🐻 | 1,600 | 64 |
+| 17 | Polar Bear 🐻‍❄️ | 1,700 | 68 |
+| 18 | Rhinoceros 🦏 | 1,800 | 72 |
+| 19 | Hippopotamus 🦛 | 1,900 | 76 |
+| 20 | Elephant 🐘 | 2,000 | 80 |
+| 21 | Silver Back Gorilla 🦍 | 2,100 | 84 |
+| 22 | Cape Buffalo 🐃 | 2,200 | 88 |
+| 23 | Lion 🦁 | 2,300 | 92 |
+| 24 | Komodo Dragon 🦎 | 2,400 | 96 |
+| 25 | Eagle 🦅 | 2,500 | 100 |
+| 26 | Phoenix 🔥 | 2,600 | 104 |
+| 27 | Dragon 🐉 | 2,700 | 108 |
+| 28 | Human CEO 👔 | 2,800 | 112 |
+| 29 | Golden CEO 👑 | 2,900 | 116 |
+| 30 | Legendary ⭐ | 3,000 | 120 |
+
+*Tasks needed assumes 25 XP per task with no misses
+
+### Progressive XP Model
+
+The evolution system uses a **linear progression** where each stage requires exactly 100 more XP than the previous stage:
+
+- **Stage 1**: 100 XP (4 tasks)
+- **Stage 2**: 200 XP (8 tasks total)
+- **Stage 10**: 1,000 XP (40 tasks total)
+- **Stage 20**: 2,000 XP (80 tasks total)
+- **Stage 30**: 3,000 XP (120 tasks total)
+
+This creates a balanced progression where:
+- Early stages feel achievable (4-8 tasks)
+- Mid-game maintains momentum (40-80 tasks)
+- Late game provides long-term goals (100-120 tasks)
+- Maximum level is reachable with consistent daily habits
 
 ## 🛠️ Technical Details
 
@@ -149,7 +188,7 @@ PetProgress/
 ├── shared/                       # Shared state management
 │   └── WidgetStateStore.ts
 ├── constants/                    # Configuration
-│   └── petStages.ts             # 30-stage system
+│   └── petStages.ts             # 30-stage progressive system
 ├── styles/                       # Design system
 │   └── commonStyles.ts          # Bright-Trust palette
 └── docs/                         # Documentation
@@ -203,7 +242,7 @@ See [WIDGET_TROUBLESHOOTING.md](docs/WIDGET_TROUBLESHOOTING.md) for more solutio
 - ✅ Deep link action handlers
 - ✅ Timeline provider with hourly refresh
 - ✅ App Group storage (UserDefaults)
-- ✅ 30-stage evolution system
+- ✅ 30-stage progressive evolution system (100→3000 XP)
 - ✅ Bright-Trust dark color palette
 - ✅ Level-scaled miss penalties
 - ✅ Widget reload after actions
