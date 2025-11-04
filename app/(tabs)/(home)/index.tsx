@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, useColorScheme, ActivityIndicator, RefreshControl, TouchableOpacity, Alert } from 'react-native';
 import { getTodayKey } from '@/utils/storage';
-import { colors, spacing, typography } from '@/styles/commonStyles';
+import { colors, spacing, typography, borderRadius } from '@/styles/commonStyles';
 import Animated, { FadeIn, Layout } from 'react-native-reanimated';
 import TaskCard from '@/components/TaskCard';
 import PetDisplay from '@/components/PetDisplay';
@@ -28,8 +28,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   sectionTitle: {
-    fontSize: typography.sizes.lg,
-    fontWeight: typography.weights.bold as any,
+    fontSize: typography.h3.fontSize,
+    fontWeight: typography.h3.fontWeight,
     marginBottom: spacing.md,
     paddingHorizontal: spacing.lg,
   },
@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyText: {
-    fontSize: typography.sizes.md,
+    fontSize: typography.body.fontSize,
     textAlign: 'center',
     marginTop: spacing.md,
   },
@@ -47,10 +47,13 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderRadius: borderRadius.md,
     alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: spacing.sm,
   },
   debugButtonText: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.semibold as any,
+    fontSize: typography.bodySmall.fontSize,
+    fontWeight: '600',
   },
 });
 
@@ -133,7 +136,7 @@ ${currentTask ? `
   if (loading) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: isDark ? colors.dark.background : colors.light.background }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={isDark ? colors.dark.primary : colors.light.primary} />
       </View>
     );
   }
@@ -165,7 +168,7 @@ ${currentTask ? `
             <RefreshControl
               refreshing={loading}
               onRefresh={refreshState}
-              tintColor={colors.primary}
+              tintColor={isDark ? colors.dark.primary : colors.light.primary}
             />
           }
         >
@@ -182,8 +185,8 @@ ${currentTask ? `
             style={[styles.debugButton, { backgroundColor: isDark ? colors.dark.card : colors.light.card }]}
             onPress={showDebugInfo}
           >
-            <IconSymbol name="info.circle" size={20} color={colors.primary} />
-            <Text style={[styles.debugButtonText, { color: colors.primary }]}>
+            <IconSymbol name="info.circle" size={20} color={isDark ? colors.dark.primary : colors.light.primary} />
+            <Text style={[styles.debugButtonText, { color: isDark ? colors.dark.primary : colors.light.primary }]}>
               Widget Setup & Debug Info
             </Text>
           </TouchableOpacity>
