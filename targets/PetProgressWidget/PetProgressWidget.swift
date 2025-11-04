@@ -42,26 +42,55 @@ struct Provider: AppIntentTimelineProvider {
         let widgetState = loadWidgetState()
         let entry = SimpleEntry(date: Date(), widgetState: widgetState)
         
+        // Log widget state for debugging
+        if let state = widgetState {
+            print("📱 [PetProgressWidget] Timeline generated:")
+            print("   - Tasks: \(state.todayTasks.count)")
+            print("   - Current index: \(state.currentIndex)")
+            print("   - Pet XP: \(state.petState.xp)")
+            print("   - Pet Stage: \(state.petState.stageIndex)")
+            if state.todayTasks.count > 0 {
+                print("   - First task: \(state.todayTasks[0].title)")
+            }
+        } else {
+            print("⚠️ [PetProgressWidget] No widget state found!")
+        }
+        
         // Calculate next refresh time based on grace minutes
         let graceMinutes = widgetState?.graceMinutes ?? 0
         let nextUpdate = nextBoundaryConsideringGrace(Date(), graceMinutes: graceMinutes)
+        
+        print("⏰ [PetProgressWidget] Next update: \(nextUpdate)")
         
         return Timeline(entries: [entry], policy: .after(nextUpdate))
     }
     
     // Load widget state from App Group shared container
     private func loadWidgetState() -> WidgetState? {
-        guard let sharedDefaults = UserDefaults(suiteName: "group.com.petprogress.app"),
-              let jsonString = sharedDefaults.string(forKey: "@PetProgress:widgetState"),
-              let jsonData = jsonString.data(using: .utf8) else {
+        let appGroupIdentifier = "group.com.petprogress.app"
+        let stateKey = "@PetProgress:widgetState"
+        
+        guard let sharedDefaults = UserDefaults(suiteName: appGroupIdentifier) else {
+            print("❌ [PetProgressWidget] Failed to access App Group: \(appGroupIdentifier)")
+            return nil
+        }
+        
+        guard let jsonString = sharedDefaults.string(forKey: stateKey) else {
+            print("⚠️ [PetProgressWidget] No data found for key: \(stateKey)")
+            return nil
+        }
+        
+        guard let jsonData = jsonString.data(using: .utf8) else {
+            print("❌ [PetProgressWidget] Failed to convert string to data")
             return nil
         }
         
         do {
             let state = try JSONDecoder().decode(WidgetState.self, from: jsonData)
+            print("✅ [PetProgressWidget] Successfully loaded widget state")
             return state
         } catch {
-            print("Error decoding widget state: \(error)")
+            print("❌ [PetProgressWidget] Error decoding widget state: \(error)")
             return nil
         }
     }
@@ -142,13 +171,17 @@ struct SmallWidgetView: View {
         } else {
             ZStack {
                 Color(hex: "#121826")
-                VStack {
+                VStack(spacing: 8) {
                     Text("🥚")
                         .font(.system(size: 50))
                     Text("No tasks")
                         .font(.system(size: 12))
                         .foregroundColor(Color(hex: "#A8B1C7"))
+                    Text("Open app to add")
+                        .font(.system(size: 10))
+                        .foregroundColor(Color(hex: "#60A5FA"))
                 }
+                .padding()
             }
         }
     }
@@ -260,12 +293,15 @@ struct MediumWidgetView: View {
         } else {
             ZStack {
                 Color(hex: "#121826")
-                VStack {
+                VStack(spacing: 12) {
                     Text("🥚")
                         .font(.system(size: 50))
                     Text("No tasks today")
                         .font(.system(size: 14))
                         .foregroundColor(Color(hex: "#A8B1C7"))
+                    Text("Open app to add tasks")
+                        .font(.system(size: 12))
+                        .foregroundColor(Color(hex: "#60A5FA"))
                 }
             }
         }

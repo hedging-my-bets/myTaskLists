@@ -30,23 +30,29 @@ export const saveWidgetState = async (state: WidgetState): Promise<void> => {
     
     const jsonString = JSON.stringify(stateWithTimestamp);
     
-    // Save to AsyncStorage for React Native
-    await AsyncStorage.setItem(WIDGET_STATE_KEY, jsonString);
-    
-    // On iOS, also save to App Group shared container
-    if (Platform.OS === 'ios') {
-      await saveToAppGroup(WIDGET_STATE_KEY, jsonString);
-    }
-    
-    console.log('Widget state saved:', {
+    console.log('📱 [WidgetStateStore] Saving widget state:', {
       taskCount: stateWithTimestamp.todayTasks.length,
       currentIndex: stateWithTimestamp.currentIndex,
       petXP: stateWithTimestamp.petState.xp,
       petStage: stateWithTimestamp.petState.stageIndex,
+      graceMinutes: stateWithTimestamp.graceMinutes,
       timestamp: new Date(stateWithTimestamp.lastUpdated).toISOString(),
+      firstTask: stateWithTimestamp.todayTasks[0]?.title || 'No tasks',
     });
+    
+    // Save to AsyncStorage for React Native
+    await AsyncStorage.setItem(WIDGET_STATE_KEY, jsonString);
+    console.log('✅ [WidgetStateStore] Saved to AsyncStorage');
+    
+    // On iOS, also save to App Group shared container
+    if (Platform.OS === 'ios') {
+      await saveToAppGroup(WIDGET_STATE_KEY, jsonString);
+      console.log('✅ [WidgetStateStore] Saved to App Group (iOS)');
+    }
+    
+    console.log('🎉 [WidgetStateStore] Widget state saved successfully!');
   } catch (error) {
-    console.error('Error saving widget state:', error);
+    console.error('❌ [WidgetStateStore] Error saving widget state:', error);
   }
 };
 
@@ -58,7 +64,7 @@ export const loadWidgetState = async (): Promise<WidgetState | null> => {
     const stored = await AsyncStorage.getItem(WIDGET_STATE_KEY);
     if (stored) {
       const state = JSON.parse(stored) as WidgetState;
-      console.log('Widget state loaded:', {
+      console.log('📖 [WidgetStateStore] Widget state loaded:', {
         taskCount: state.todayTasks.length,
         currentIndex: state.currentIndex,
         petXP: state.petState.xp,
@@ -67,8 +73,9 @@ export const loadWidgetState = async (): Promise<WidgetState | null> => {
       });
       return state;
     }
+    console.log('⚠️ [WidgetStateStore] No widget state found in storage');
   } catch (error) {
-    console.error('Error loading widget state:', error);
+    console.error('❌ [WidgetStateStore] Error loading widget state:', error);
   }
   return null;
 };
@@ -85,6 +92,14 @@ export const syncWidgetState = async (
 ): Promise<void> => {
   const todayKey = getTodayKey();
   const todayTasks = tasks.filter(t => t.dayKey === todayKey);
+  
+  console.log('🔄 [WidgetStateStore] Syncing widget state...');
+  console.log('   Today key:', todayKey);
+  console.log('   Total tasks:', tasks.length);
+  console.log('   Today tasks:', todayTasks.length);
+  console.log('   Current index:', currentIndex);
+  console.log('   Pet XP:', petState.xp);
+  console.log('   Pet Stage:', petState.stageIndex);
   
   const widgetState: WidgetState = {
     todayTasks,
@@ -103,9 +118,12 @@ export const syncWidgetState = async (
  * Calls WidgetCenter.shared.reloadTimelines(ofKind:) via native bridge
  */
 export const requestWidgetReload = async (): Promise<void> => {
-  console.log('Widget reload requested - WidgetCenter.shared.reloadTimelines("PetProgressWidget")');
+  console.log('🔄 [WidgetStateStore] Requesting widget reload...');
   
   if (Platform.OS === 'ios') {
     await reloadWidget('PetProgressWidget');
+    console.log('✅ [WidgetStateStore] Widget reload requested (iOS)');
+  } else {
+    console.log('⚠️ [WidgetStateStore] Widget reload skipped (not iOS)');
   }
 };

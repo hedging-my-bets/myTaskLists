@@ -1,285 +1,351 @@
 
 import { colors, spacing, borderRadius, typography } from '@/styles/commonStyles';
-import { useAppState } from '@/hooks/useAppState';
+import { PET_STAGES } from '@/constants/petStages';
+import { View, Text, StyleSheet, ScrollView, useColorScheme, TouchableOpacity, Linking, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState } from 'react';
 import { IconSymbol } from '@/components/IconSymbol';
-import { PET_STAGES } from '@/constants/petStages';
-import { View, Text, StyleSheet, ScrollView, useColorScheme, TouchableOpacity, Linking, Alert } from 'react-native';
-
-const SettingsScreen = () => {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const { state, updateGraceMinutes } = useAppState();
-
-  const handleGraceMinutesChange = (delta: number) => {
-    if (!state) return;
-    const newValue = state.settings.graceMinutes + delta;
-    updateGraceMinutes(newValue);
-  };
-
-  const handlePrivacyPolicy = () => {
-    if (state?.settings.privacyPolicyURL) {
-      Linking.openURL(state.settings.privacyPolicyURL);
-    }
-  };
-
-  const showWidgetInfo = () => {
-    Alert.alert(
-      'Home Screen Widgets ✅',
-      'PetProgress supports iOS home screen widgets!\n\n' +
-      '📱 Small Widget: Shows your pet and current hour\n' +
-      '📱 Medium Widget: Shows your pet, current task, and action buttons (✓/✕/‹/›)\n\n' +
-      '✅ Widgets update hourly and respect your grace minutes setting.\n' +
-      '✅ Deep links work to open the app and perform actions.\n' +
-      '✅ Shared state via App Groups keeps everything in sync.\n\n' +
-      'To add a widget:\n' +
-      '1. Long press on your home screen\n' +
-      '2. Tap the + button\n' +
-      '3. Search for "PetProgress"\n' +
-      '4. Choose Small or Medium size\n\n' +
-      'Note: Interactive buttons in widgets require a native build with WidgetKit. The widget will display your current task and pet, and tapping it will open the app.',
-      [{ text: 'Got it!' }]
-    );
-  };
-
-  if (!state) {
-    return (
-      <SafeAreaView style={[styles.container, { backgroundColor: isDark ? colors.dark.background : colors.light.background }]}>
-        <Text style={[styles.loadingText, { color: isDark ? colors.dark.text : colors.light.text }]}>
-          Loading settings...
-        </Text>
-      </SafeAreaView>
-    );
-  }
-
-  return (
-    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? colors.dark.background : colors.light.background }]}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={[styles.title, { color: isDark ? colors.dark.text : colors.light.text }]}>
-          Settings
-        </Text>
-
-        {/* Grace Minutes Setting */}
-        <View style={[styles.section, { backgroundColor: isDark ? colors.dark.card : colors.light.card }]}>
-          <View style={styles.sectionHeader}>
-            <IconSymbol name="clock.fill" size={24} color={isDark ? colors.dark.primary : colors.light.primary} />
-            <Text style={[styles.sectionTitle, { color: isDark ? colors.dark.text : colors.light.text }]}>
-              Grace Minutes
-            </Text>
-          </View>
-          <Text style={[styles.sectionDescription, { color: isDark ? colors.dark.textSecondary : colors.light.textSecondary }]}>
-            Tasks remain &quot;current&quot; for this many minutes into the next hour. This also affects rollover timing at midnight.
-          </Text>
-          <View style={styles.graceControl}>
-            <TouchableOpacity
-              style={[styles.graceButton, { backgroundColor: isDark ? colors.dark.primary : colors.light.primary }]}
-              onPress={() => handleGraceMinutesChange(-5)}
-              disabled={state.settings.graceMinutes <= 0}
-            >
-              <Text style={styles.graceButtonText}>-5</Text>
-            </TouchableOpacity>
-            <View style={[styles.graceValue, { backgroundColor: isDark ? '#333' : '#f5f5f5' }]}>
-              <Text style={[styles.graceValueText, { color: isDark ? colors.dark.text : colors.light.text }]}>
-                {state.settings.graceMinutes} min
-              </Text>
-            </View>
-            <TouchableOpacity
-              style={[styles.graceButton, { backgroundColor: isDark ? colors.dark.primary : colors.light.primary }]}
-              onPress={() => handleGraceMinutesChange(5)}
-              disabled={state.settings.graceMinutes >= 30}
-            >
-              <Text style={styles.graceButtonText}>+5</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Widget Information */}
-        <View style={[styles.section, { backgroundColor: isDark ? colors.dark.card : colors.light.card }]}>
-          <View style={styles.sectionHeader}>
-            <IconSymbol name="square.grid.2x2.fill" size={24} color={isDark ? colors.dark.primary : colors.light.primary} />
-            <Text style={[styles.sectionTitle, { color: isDark ? colors.dark.text : colors.light.text }]}>
-              Home Screen Widgets ✅
-            </Text>
-          </View>
-          <Text style={[styles.sectionDescription, { color: isDark ? colors.dark.textSecondary : colors.light.textSecondary }]}>
-            Add PetProgress widgets to your home screen to see your pet and tasks at a glance. Widgets are fully functional and update hourly!
-          </Text>
-          <TouchableOpacity
-            style={[styles.button, { backgroundColor: isDark ? colors.dark.primary : colors.light.primary }]}
-            onPress={showWidgetInfo}
-          >
-            <Text style={styles.buttonText}>Learn More</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Pet Stages Info */}
-        <View style={[styles.section, { backgroundColor: isDark ? colors.dark.card : colors.light.card }]}>
-          <View style={styles.sectionHeader}>
-            <IconSymbol name="star.fill" size={24} color={isDark ? colors.dark.primary : colors.light.primary} />
-            <Text style={[styles.sectionTitle, { color: isDark ? colors.dark.text : colors.light.text }]}>
-              Pet Evolution
-            </Text>
-          </View>
-          <Text style={[styles.sectionDescription, { color: isDark ? colors.dark.textSecondary : colors.light.textSecondary }]}>
-            Your pet evolves through 30 stages as you complete tasks. Each completed task awards +25 XP. First level requires 100 XP, then 200 XP, 400 XP, etc. (doubling each time). Missing tasks at rollover deducts XP based on your current level (1× at level 1, up to 3× at level 30).
-          </Text>
-          <View style={styles.stagesInfo}>
-            <Text style={[styles.stagesText, { color: isDark ? colors.dark.text : colors.light.text }]}>
-              Current Stage: {PET_STAGES[state.petState.stageIndex].name} (Level {state.petState.stageIndex + 1})
-            </Text>
-            <Text style={[styles.stagesText, { color: isDark ? colors.dark.text : colors.light.text }]}>
-              Total XP: {state.petState.xp}
-            </Text>
-          </View>
-        </View>
-
-        {/* Privacy Policy */}
-        <View style={[styles.section, { backgroundColor: isDark ? colors.dark.card : colors.light.card }]}>
-          <View style={styles.sectionHeader}>
-            <IconSymbol name="lock.fill" size={24} color={isDark ? colors.dark.primary : colors.light.primary} />
-            <Text style={[styles.sectionTitle, { color: isDark ? colors.dark.text : colors.light.text }]}>
-              Privacy
-            </Text>
-          </View>
-          <Text style={[styles.sectionDescription, { color: isDark ? colors.dark.textSecondary : colors.light.textSecondary }]}>
-            PetProgress is fully offline. All your data stays on your device.
-          </Text>
-          <TouchableOpacity
-            style={[styles.button, { backgroundColor: isDark ? colors.dark.primary : colors.light.primary }]}
-            onPress={handlePrivacyPolicy}
-          >
-            <Text style={styles.buttonText}>Privacy Policy</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Deep Links Info */}
-        <View style={[styles.section, { backgroundColor: isDark ? colors.dark.card : colors.light.card }]}>
-          <View style={styles.sectionHeader}>
-            <IconSymbol name="link" size={24} color={isDark ? colors.dark.primary : colors.light.primary} />
-            <Text style={[styles.sectionTitle, { color: isDark ? colors.dark.text : colors.light.text }]}>
-              Deep Links
-            </Text>
-          </View>
-          <Text style={[styles.sectionDescription, { color: isDark ? colors.dark.textSecondary : colors.light.textSecondary }]}>
-            PetProgress supports deep links for quick actions:
-          </Text>
-          <View style={styles.deepLinksInfo}>
-            <Text style={[styles.deepLinkText, { color: isDark ? colors.dark.textSecondary : colors.light.textSecondary }]}>
-              • petprogress://complete - Complete current task
-            </Text>
-            <Text style={[styles.deepLinkText, { color: isDark ? colors.dark.textSecondary : colors.light.textSecondary }]}>
-              • petprogress://skip - Skip current task
-            </Text>
-            <Text style={[styles.deepLinkText, { color: isDark ? colors.dark.textSecondary : colors.light.textSecondary }]}>
-              • petprogress://miss - Mark task as missed
-            </Text>
-            <Text style={[styles.deepLinkText, { color: isDark ? colors.dark.textSecondary : colors.light.textSecondary }]}>
-              • petprogress://next - Next task
-            </Text>
-            <Text style={[styles.deepLinkText, { color: isDark ? colors.dark.textSecondary : colors.light.textSecondary }]}>
-              • petprogress://prev - Previous task
-            </Text>
-          </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
-};
+import { useAppState } from '@/hooks/useAppState';
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
   scrollContent: {
-    padding: spacing.lg,
     paddingBottom: 100,
   },
-  loadingText: {
-    textAlign: 'center',
-    marginTop: spacing.xl,
-    fontSize: typography.body.fontSize,
-  },
-  title: {
-    fontSize: typography.h1.fontSize,
-    fontWeight: '700',
-    marginBottom: spacing.lg,
-  },
   section: {
-    padding: spacing.lg,
-    borderRadius: borderRadius.lg,
-    marginBottom: spacing.lg,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.xl,
   },
   sectionTitle: {
-    fontSize: typography.h3.fontSize,
-    fontWeight: '700',
-    marginLeft: spacing.sm,
+    fontSize: typography.sizes.lg,
+    fontWeight: typography.weights.bold as any,
+    marginBottom: spacing.md,
+    paddingHorizontal: spacing.lg,
   },
-  sectionDescription: {
-    fontSize: typography.body.fontSize,
-    lineHeight: 22,
+  card: {
+    marginHorizontal: spacing.lg,
+    padding: spacing.lg,
+    borderRadius: borderRadius.lg,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: spacing.md,
   },
-  graceControl: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.md,
+  label: {
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.medium as any,
   },
-  graceButton: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.md,
-    minWidth: 60,
-    alignItems: 'center',
-  },
-  graceButtonText: {
-    color: '#fff',
-    fontSize: typography.body.fontSize,
-    fontWeight: '700',
-  },
-  graceValue: {
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.md,
-    minWidth: 100,
-    alignItems: 'center',
-  },
-  graceValueText: {
-    fontSize: typography.h3.fontSize,
-    fontWeight: '700',
+  value: {
+    fontSize: typography.sizes.md,
   },
   button: {
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
+    padding: spacing.md,
+    borderRadius: borderRadius.md,
+    alignItems: 'center',
+    marginTop: spacing.sm,
+  },
+  buttonText: {
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.semibold as any,
+  },
+  counterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  counterButton: {
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  counterValue: {
+    fontSize: typography.sizes.xl,
+    fontWeight: typography.weights.bold as any,
+    minWidth: 60,
+    textAlign: 'center',
+  },
+  infoText: {
+    fontSize: typography.sizes.sm,
+    marginTop: spacing.sm,
+    lineHeight: 20,
+  },
+  stageGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
+  stageItem: {
+    width: '30%',
+    padding: spacing.sm,
     borderRadius: borderRadius.md,
     alignItems: 'center',
   },
-  buttonText: {
-    color: '#fff',
-    fontSize: typography.body.fontSize,
-    fontWeight: '600',
-  },
-  stagesInfo: {
-    marginTop: spacing.sm,
-  },
-  stagesText: {
-    fontSize: typography.body.fontSize,
+  stageEmoji: {
+    fontSize: 30,
     marginBottom: spacing.xs,
   },
-  deepLinksInfo: {
-    marginTop: spacing.sm,
+  stageName: {
+    fontSize: typography.sizes.xs,
+    textAlign: 'center',
   },
-  deepLinkText: {
-    fontSize: typography.bodySmall.fontSize,
-    marginBottom: spacing.xs,
-    fontFamily: 'monospace',
+  stageXP: {
+    fontSize: typography.sizes.xs,
+    marginTop: spacing.xs,
+  },
+  widgetSetupCard: {
+    marginHorizontal: spacing.lg,
+    padding: spacing.lg,
+    borderRadius: borderRadius.lg,
+    borderWidth: 2,
+  },
+  widgetSetupTitle: {
+    fontSize: typography.sizes.lg,
+    fontWeight: typography.weights.bold as any,
+    marginBottom: spacing.md,
+  },
+  widgetStep: {
+    flexDirection: 'row',
+    marginBottom: spacing.md,
+    alignItems: 'flex-start',
+  },
+  widgetStepNumber: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.sm,
+  },
+  widgetStepNumberText: {
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.bold as any,
+  },
+  widgetStepText: {
+    flex: 1,
+    fontSize: typography.sizes.md,
+    lineHeight: 22,
+  },
+  warningBox: {
+    padding: spacing.md,
+    borderRadius: borderRadius.md,
+    marginTop: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  warningText: {
+    flex: 1,
+    fontSize: typography.sizes.sm,
+    marginLeft: spacing.sm,
+    lineHeight: 20,
   },
 });
 
-export default SettingsScreen;
+export default function SettingsScreen() {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const { state, updateGraceMinutes } = useAppState();
+
+  if (!state) {
+    return (
+      <View style={[styles.container, { backgroundColor: isDark ? colors.dark.background : colors.light.background }]}>
+        <SafeAreaView edges={['top']} style={{ flex: 1 }}>
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <Text style={{ color: isDark ? colors.dark.text : colors.light.text }}>Loading...</Text>
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  const handleGraceMinutesChange = (delta: number) => {
+    const newValue = state.settings.graceMinutes + delta;
+    if (newValue >= 0 && newValue <= 30) {
+      updateGraceMinutes(newValue);
+    }
+  };
+
+  const handlePrivacyPolicy = () => {
+    Linking.openURL(state.settings.privacyPolicyURL);
+  };
+
+  const showWidgetInfo = () => {
+    Alert.alert(
+      'Widget Setup',
+      'To add the PetProgress widget:\n\n1. Long press on your home screen\n2. Tap the + button (top left)\n3. Search for "PetProgress"\n4. Select widget size (Small or Medium)\n5. Add to home screen\n\nThe widget will show your current task and pet!',
+      [{ text: 'Got it!' }]
+    );
+  };
+
+  return (
+    <View style={[styles.container, { backgroundColor: isDark ? colors.dark.background : colors.light.background }]}>
+      <SafeAreaView edges={['top']} style={{ flex: 1 }}>
+        <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+          {/* Widget Setup Instructions */}
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: isDark ? colors.dark.text : colors.light.text }]}>
+              📱 Widget Setup
+            </Text>
+            <View style={[styles.widgetSetupCard, { 
+              backgroundColor: isDark ? colors.dark.card : colors.light.card,
+              borderColor: colors.primary,
+            }]}>
+              <Text style={[styles.widgetSetupTitle, { color: colors.primary }]}>
+                How to Add PetProgress Widget
+              </Text>
+              
+              <View style={styles.widgetStep}>
+                <View style={[styles.widgetStepNumber, { backgroundColor: colors.primary }]}>
+                  <Text style={[styles.widgetStepNumberText, { color: '#FFFFFF' }]}>1</Text>
+                </View>
+                <Text style={[styles.widgetStepText, { color: isDark ? colors.dark.text : colors.light.text }]}>
+                  Long press on your home screen
+                </Text>
+              </View>
+
+              <View style={styles.widgetStep}>
+                <View style={[styles.widgetStepNumber, { backgroundColor: colors.primary }]}>
+                  <Text style={[styles.widgetStepNumberText, { color: '#FFFFFF' }]}>2</Text>
+                </View>
+                <Text style={[styles.widgetStepText, { color: isDark ? colors.dark.text : colors.light.text }]}>
+                  Tap the + button in the top left corner
+                </Text>
+              </View>
+
+              <View style={styles.widgetStep}>
+                <View style={[styles.widgetStepNumber, { backgroundColor: colors.primary }]}>
+                  <Text style={[styles.widgetStepNumberText, { color: '#FFFFFF' }]}>3</Text>
+                </View>
+                <Text style={[styles.widgetStepText, { color: isDark ? colors.dark.text : colors.light.text }]}>
+                  Search for &quot;PetProgress&quot;
+                </Text>
+              </View>
+
+              <View style={styles.widgetStep}>
+                <View style={[styles.widgetStepNumber, { backgroundColor: colors.primary }]}>
+                  <Text style={[styles.widgetStepNumberText, { color: '#FFFFFF' }]}>4</Text>
+                </View>
+                <Text style={[styles.widgetStepText, { color: isDark ? colors.dark.text : colors.light.text }]}>
+                  Select widget size (Small or Medium)
+                </Text>
+              </View>
+
+              <View style={styles.widgetStep}>
+                <View style={[styles.widgetStepNumber, { backgroundColor: colors.primary }]}>
+                  <Text style={[styles.widgetStepNumberText, { color: '#FFFFFF' }]}>5</Text>
+                </View>
+                <Text style={[styles.widgetStepText, { color: isDark ? colors.dark.text : colors.light.text }]}>
+                  Tap &quot;Add Widget&quot; to add it to your home screen
+                </Text>
+              </View>
+
+              <View style={[styles.warningBox, { backgroundColor: isDark ? '#1F2937' : '#FEF3C7' }]}>
+                <IconSymbol name="exclamationmark.triangle" size={20} color={isDark ? '#FBBF24' : '#D97706'} />
+                <Text style={[styles.warningText, { color: isDark ? '#FCD34D' : '#92400E' }]}>
+                  If you see a widget showing &quot;Time&quot; and &quot;Favorite Emoji&quot;, that&apos;s NOT the PetProgress widget. Remove it and add the correct one!
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Grace Minutes */}
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: isDark ? colors.dark.text : colors.light.text }]}>
+              ⏰ Grace Period
+            </Text>
+            <View style={[styles.card, { backgroundColor: isDark ? colors.dark.card : colors.light.card }]}>
+              <View style={styles.row}>
+                <Text style={[styles.label, { color: isDark ? colors.dark.text : colors.light.text }]}>
+                  Grace Minutes
+                </Text>
+                <View style={styles.counterRow}>
+                  <TouchableOpacity
+                    style={[styles.counterButton, { backgroundColor: isDark ? colors.dark.background : colors.light.background }]}
+                    onPress={() => handleGraceMinutesChange(-5)}
+                  >
+                    <IconSymbol name="minus" size={20} color={colors.primary} />
+                  </TouchableOpacity>
+                  <Text style={[styles.counterValue, { color: colors.primary }]}>
+                    {state.settings.graceMinutes}
+                  </Text>
+                  <TouchableOpacity
+                    style={[styles.counterButton, { backgroundColor: isDark ? colors.dark.background : colors.light.background }]}
+                    onPress={() => handleGraceMinutesChange(5)}
+                  >
+                    <IconSymbol name="plus" size={20} color={colors.primary} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+              <Text style={[styles.infoText, { color: isDark ? colors.dark.textSecondary : colors.light.textSecondary }]}>
+                Tasks remain &quot;current&quot; for this many minutes after their scheduled hour. 
+                After the grace period ends, incomplete tasks are marked as missed.
+              </Text>
+            </View>
+          </View>
+
+          {/* Pet Stages */}
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: isDark ? colors.dark.text : colors.light.text }]}>
+              🐾 Pet Evolution Stages
+            </Text>
+            <View style={[styles.card, { backgroundColor: isDark ? colors.dark.card : colors.light.card }]}>
+              <Text style={[styles.infoText, { color: isDark ? colors.dark.textSecondary : colors.light.textSecondary, marginTop: 0, marginBottom: spacing.md }]}>
+                Your pet evolves through 31 stages as you complete tasks and earn XP!
+              </Text>
+              <View style={styles.stageGrid}>
+                {PET_STAGES.map((stage, index) => (
+                  <View
+                    key={stage.name}
+                    style={[
+                      styles.stageItem,
+                      {
+                        backgroundColor: state.petState.stageIndex === index
+                          ? colors.primary + '20'
+                          : isDark ? colors.dark.background : colors.light.background,
+                        borderWidth: state.petState.stageIndex === index ? 2 : 0,
+                        borderColor: colors.primary,
+                      },
+                    ]}
+                  >
+                    <Text style={styles.stageEmoji}>{stage.emoji}</Text>
+                    <Text style={[styles.stageName, { 
+                      color: isDark ? colors.dark.text : colors.light.text,
+                      fontWeight: state.petState.stageIndex === index ? typography.weights.bold as any : typography.weights.regular as any,
+                    }]}>
+                      {stage.name}
+                    </Text>
+                    <Text style={[styles.stageXP, { color: isDark ? colors.dark.textSecondary : colors.light.textSecondary }]}>
+                      {stage.xpRequired} XP
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </View>
+
+          {/* Privacy Policy */}
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: isDark ? colors.dark.text : colors.light.text }]}>
+              📄 Legal
+            </Text>
+            <View style={[styles.card, { backgroundColor: isDark ? colors.dark.card : colors.light.card }]}>
+              <TouchableOpacity
+                style={[styles.button, { backgroundColor: colors.primary }]}
+                onPress={handlePrivacyPolicy}
+              >
+                <Text style={[styles.buttonText, { color: '#FFFFFF' }]}>
+                  Privacy Policy
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </View>
+  );
+}
