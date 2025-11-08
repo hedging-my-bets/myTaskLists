@@ -37,6 +37,12 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, currentTaskId, onTaskPress }
     if (task.isDone) {
       return isDark ? 'rgba(34, 197, 94, 0.1)' : '#e8f5e9'; // Success tint
     }
+    if (task.isMissed) {
+      return isDark ? 'rgba(248, 113, 113, 0.1)' : '#ffebee'; // Error tint
+    }
+    if (task.isSkipped) {
+      return isDark ? 'rgba(251, 191, 36, 0.1)' : '#fff3e0'; // Warning tint
+    }
     return theme.card; // #121826 in dark mode
   };
 
@@ -64,8 +70,6 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, currentTaskId, onTaskPress }
                 backgroundColor: getTaskBackgroundColor(task),
                 borderLeftWidth: task.id === currentTaskId ? 4 : 0,
                 borderLeftColor: theme.primary, // #60A5FA
-                borderWidth: task.isSkipped ? 2 : 0,
-                borderColor: task.isSkipped ? colors.dark.warning : 'transparent', // #FBBF24
               },
             ]}
           >
@@ -109,14 +113,14 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, currentTaskId, onTaskPress }
                     Current Task
                   </Text>
                 )}
-                {task.isSkipped && (
+                {(task.isDone || task.isSkipped || task.isMissed) && (
                   <Text
                     style={[
-                      styles.tapToReopen,
-                      { color: colors.dark.warning }, // #FBBF24
+                      styles.tapToChange,
+                      { color: theme.primary },
                     ]}
                   >
-                    Tap to reopen
+                    Tap to change status
                   </Text>
                 )}
               </View>
@@ -183,7 +187,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  tapToReopen: {
+  tapToChange: {
     fontSize: typography.caption.fontSize,
     fontWeight: '600',
     marginTop: spacing.xs,

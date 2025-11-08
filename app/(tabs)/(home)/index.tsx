@@ -66,9 +66,9 @@ export default function HomeScreen() {
     state,
     loading,
     selectTask,
-    completeCurrentTask,
-    skipCurrentTask,
-    missCurrentTask,
+    completeTaskById,
+    skipTaskById,
+    missTaskById,
     reopenTask,
     nextTask,
     prevTask,
@@ -95,12 +95,50 @@ export default function HomeScreen() {
   const handleTaskPress = (task: Task) => {
     console.log(`🎯 [HomeScreen] Task selected: ${task.id} - "${task.title}"`);
     
-    // If task is skipped, reopen it
-    if (task.isSkipped) {
-      reopenTask(task.id);
-    } else {
-      // Otherwise, just select it as the current task
-      selectTask(task.id);
+    // Always select the task to show it in the main card
+    selectTask(task.id);
+  };
+
+  const handleCompleteTask = () => {
+    if (currentTask) {
+      completeTaskById(currentTask.id);
+    }
+  };
+
+  const handleSkipTask = () => {
+    if (currentTask) {
+      skipTaskById(currentTask.id);
+    }
+  };
+
+  const handleMissTask = () => {
+    if (currentTask) {
+      Alert.alert(
+        'Mark as Missed',
+        'This will deduct XP from your pet. Are you sure?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Miss', style: 'destructive', onPress: () => missTaskById(currentTask.id) },
+        ]
+      );
+    }
+  };
+
+  const handleReopenTask = () => {
+    if (currentTask) {
+      reopenTask(currentTask.id);
+    }
+  };
+
+  const handleEditTitle = (newTitle: string) => {
+    if (currentTask) {
+      editTaskTitle(currentTask.id, newTitle);
+    }
+  };
+
+  const handleEditDescription = (newDescription: string) => {
+    if (currentTask) {
+      editTaskDescription(currentTask.id, newDescription);
     }
   };
 
@@ -209,14 +247,14 @@ ${currentTask ? `
               </Text>
               <TaskCard
                 task={currentTask}
-                onComplete={completeCurrentTask}
-                onSkip={skipCurrentTask}
-                onMiss={missCurrentTask}
+                onComplete={handleCompleteTask}
+                onSkip={handleSkipTask}
+                onMiss={handleMissTask}
                 onPrev={prevTask}
                 onNext={nextTask}
-                onEditTitle={editTaskTitle}
-                onEditDescription={editTaskDescription}
-                onReopenTask={reopenTask}
+                onEditTitle={handleEditTitle}
+                onEditDescription={handleEditDescription}
+                onReopenTask={handleReopenTask}
                 taskNumber={todayTasks.findIndex(t => t.id === currentTask.id) + 1}
                 totalTasks={todayTasks.length}
               />

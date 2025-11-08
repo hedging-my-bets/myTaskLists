@@ -3,7 +3,7 @@ import { colors, spacing, borderRadius, typography } from '@/styles/commonStyles
 import Animated, { FadeInDown, FadeOutUp, Layout } from 'react-native-reanimated';
 import { IconSymbol } from './IconSymbol';
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, useColorScheme, TextInput, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, useColorScheme, TextInput, Platform } from 'react-native';
 import { Task } from '@/types';
 
 interface TaskCardProps {
@@ -73,6 +73,12 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const getCardBackgroundColor = () => {
     if (task.isDone) {
       return isDark ? 'rgba(34, 197, 94, 0.1)' : '#e8f5e9'; // Success tint
+    }
+    if (task.isMissed) {
+      return isDark ? 'rgba(248, 113, 113, 0.1)' : '#ffebee'; // Error tint
+    }
+    if (task.isSkipped) {
+      return isDark ? 'rgba(251, 191, 36, 0.1)' : '#fff3e0'; // Warning tint
     }
     return theme.card; // #121826 in dark mode
   };
@@ -183,7 +189,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
             },
           ]}
           onPress={onComplete}
-          disabled={task.isDone}
         >
           <IconSymbol name="checkmark" size={28} color="#FFFFFF" />
           <Text style={styles.buttonLabel}>Complete</Text>
@@ -199,17 +204,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 : (isDark ? 'rgba(248, 113, 113, 0.2)' : '#ffebee')
             },
           ]}
-          onPress={() => {
-            Alert.alert(
-              'Mark as Missed',
-              'This will deduct XP from your pet. Are you sure?',
-              [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Miss', style: 'destructive', onPress: onMiss },
-              ]
-            );
-          }}
-          disabled={task.isMissed}
+          onPress={onMiss}
         >
           <IconSymbol 
             name="xmark" 
@@ -235,7 +230,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
             },
           ]}
           onPress={onSkip}
-          disabled={task.isSkipped}
         >
           <IconSymbol 
             name="arrow.right" 
@@ -250,6 +244,26 @@ const TaskCard: React.FC<TaskCardProps> = ({
           </Text>
         </TouchableOpacity>
       </View>
+
+      {/* Reopen button for completed/missed/skipped tasks */}
+      {(task.isDone || task.isMissed || task.isSkipped) && onReopenTask && (
+        <TouchableOpacity
+          style={[
+            styles.reopenButton,
+            { 
+              backgroundColor: isDark ? 'rgba(96, 165, 250, 0.2)' : 'rgba(96, 165, 250, 0.1)',
+              borderColor: theme.primary,
+              borderWidth: 1,
+            },
+          ]}
+          onPress={onReopenTask}
+        >
+          <IconSymbol name="arrow.counterclockwise" size={20} color={theme.primary} />
+          <Text style={[styles.reopenButtonText, { color: theme.primary }]}>
+            Reopen Task
+          </Text>
+        </TouchableOpacity>
+      )}
     </Animated.View>
   );
 };
@@ -336,6 +350,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: spacing.sm,
+    marginBottom: spacing.sm,
   },
   actionButton: {
     flex: 1,
@@ -353,6 +368,19 @@ const styles = StyleSheet.create({
     fontSize: typography.bodySmall.fontSize,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  reopenButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.md,
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  reopenButtonText: {
+    fontSize: typography.body.fontSize,
+    fontWeight: '600',
   },
 });
 

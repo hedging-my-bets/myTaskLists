@@ -155,45 +155,63 @@ export const useAppState = () => {
     console.log('✅ [useAppState] Task selected');
   }, [state, updateState]);
 
-  const completeCurrentTask = useCallback(async () => {
+  const completeTaskById = useCallback(async (taskId: string) => {
     console.log('✅ [useAppState] ========== COMPLETE TASK ==========');
     
-    if (!state || !state.currentTaskId) {
-      console.log('❌ [useAppState] No state or current task available');
+    if (!state) {
+      console.log('❌ [useAppState] No state available');
       return;
     }
     
     const todayKey = getTodayKey();
     const todayTasks = state.tasks.filter(t => t.dayKey === todayKey);
-    const currentTask = todayTasks.find(t => t.id === state.currentTaskId);
+    const targetTask = todayTasks.find(t => t.id === taskId);
     
-    if (!currentTask) {
-      console.log('⚠️  [useAppState] Current task not found');
+    if (!targetTask) {
+      console.log('⚠️  [useAppState] Target task not found');
       return;
     }
     
-    console.log(`   Completing: "${currentTask.title}" (${currentTask.dueHour >= 0 ? `${currentTask.dueHour}:00` : 'anytime'})`);
+    console.log(`   Completing: "${targetTask.title}" (${targetTask.dueHour >= 0 ? `${targetTask.dueHour}:00` : 'anytime'})`);
+    
+    // Calculate XP change based on previous state
+    let newPetState = state.petState;
+    
+    // If task was previously missed, we need to add back the penalty AND the reward
+    if (targetTask.isMissed) {
+      console.log('🐾 [useAppState] Task was missed, reversing penalty and adding reward...');
+      // Reverse the miss penalty (add back the XP that was deducted)
+      newPetState = completeTask(newPetState);
+      // Add the completion reward
+      newPetState = completeTask(newPetState);
+    } 
+    // If task was not done before, just add the reward
+    else if (!targetTask.isDone) {
+      console.log('🐾 [useAppState] Calculating XP gain...');
+      newPetState = completeTask(state.petState);
+    }
+    // If task was already done, no XP change
+    else {
+      console.log('🐾 [useAppState] Task already completed, no XP change');
+    }
     
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     
     // Mark task as done
     let updatedTasks = state.tasks.map(t => 
-      t.id === currentTask.id ? { ...t, isDone: true, isSkipped: false, isMissed: false } : t
+      t.id === taskId ? { ...t, isDone: true, isSkipped: false, isMissed: false } : t
     );
     
     // Move completed task to bottom
     const todayTaskIds = todayTasks.map(t => t.id);
     const todayTasksUpdated = updatedTasks.filter(t => todayTaskIds.includes(t.id));
     const otherTasks = updatedTasks.filter(t => !todayTaskIds.includes(t.id));
-    const reorderedTodayTasks = moveTaskToBottom(todayTasksUpdated, currentTask.id);
+    const reorderedTodayTasks = moveTaskToBottom(todayTasksUpdated, taskId);
     updatedTasks = [...otherTasks, ...reorderedTodayTasks];
     
-    // Find next pending task
+    // Find next pending task or keep current if it's still valid
     const nextPendingTask = reorderedTodayTasks.find(t => !t.isDone && !t.isSkipped && !t.isMissed);
     const newCurrentTaskId = nextPendingTask?.id || reorderedTodayTasks[0]?.id || null;
-    
-    console.log('🐾 [useAppState] Calculating XP gain...');
-    const newPetState = completeTask(state.petState);
     
     await updateState({
       ...state,
@@ -208,46 +226,63 @@ export const useAppState = () => {
     console.log('✅ [useAppState] ========== TASK COMPLETED ==========');
   }, [state, updateState]);
 
-  const skipCurrentTask = useCallback(async () => {
+  const skipTaskById = useCallback(async (taskId: string) => {
     console.log('⏭️  [useAppState] ========== SKIP TASK ==========');
     
-    if (!state || !state.currentTaskId) {
-      console.log('❌ [useAppState] No state or current task available');
+    if (!state) {
+      console.log('❌ [useAppState] No state available');
       return;
     }
     
     const todayKey = getTodayKey();
     const todayTasks = state.tasks.filter(t => t.dayKey === todayKey);
-    const currentTask = todayTasks.find(t => t.id === state.currentTaskId);
+    const targetTask = todayTasks.find(t => t.id === taskId);
     
-    if (!currentTask) {
-      console.log('⚠️  [useAppState] Current task not found');
+    if (!targetTask) {
+      console.log('⚠️  [useAppState] Target task not found');
       return;
     }
     
-    console.log(`   Skipping: "${currentTask.title}" (${currentTask.dueHour >= 0 ? `${currentTask.dueHour}:00` : 'anytime'})`);
+    console.log(`   Skipping: "${targetTask.title}" (${targetTask.dueHour >= 0 ? `${targetTask.dueHour}:00` : 'anytime'})`);
+    
+    // Calculate XP change based on previous state
+    let newPetState = state.petState;
+    
+    // If task was previously completed, we need to remove the reward
+    if (targetTask.isDone) {
+      console.log('🐾 [useAppState] Task was completed, reversing reward...');
+      // Reverse the completion reward (subtract the XP that was added)
+      newPetState = missTask(newPetState);
+    }
+    // If task was previously missed, we need to add back the penalty
+    else if (targetTask.isMissed) {
+      console.log('🐾 [useAppState] Task was missed, reversing penalty...');
+      // Reverse the miss penalty (add back the XP that was deducted)
+      newPetState = completeTask(newPetState);
+    }
     
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     
     // Mark task as skipped
     let updatedTasks = state.tasks.map(t => 
-      t.id === currentTask.id ? { ...t, isSkipped: true, isDone: false, isMissed: false } : t
+      t.id === taskId ? { ...t, isSkipped: true, isDone: false, isMissed: false } : t
     );
     
     // Move skipped task to bottom
     const todayTaskIds = todayTasks.map(t => t.id);
     const todayTasksUpdated = updatedTasks.filter(t => todayTaskIds.includes(t.id));
     const otherTasks = updatedTasks.filter(t => !todayTaskIds.includes(t.id));
-    const reorderedTodayTasks = moveTaskToBottom(todayTasksUpdated, currentTask.id);
+    const reorderedTodayTasks = moveTaskToBottom(todayTasksUpdated, taskId);
     updatedTasks = [...otherTasks, ...reorderedTodayTasks];
     
-    // Find next pending task
+    // Find next pending task or keep current if it's still valid
     const nextPendingTask = reorderedTodayTasks.find(t => !t.isDone && !t.isSkipped && !t.isMissed);
     const newCurrentTaskId = nextPendingTask?.id || reorderedTodayTasks[0]?.id || null;
     
     await updateState({
       ...state,
       tasks: updatedTasks,
+      petState: newPetState,
       currentTaskId: newCurrentTaskId,
     });
     
@@ -257,45 +292,63 @@ export const useAppState = () => {
     console.log('✅ [useAppState] ========== TASK SKIPPED ==========');
   }, [state, updateState]);
 
-  const missCurrentTask = useCallback(async () => {
+  const missTaskById = useCallback(async (taskId: string) => {
     console.log('❌ [useAppState] ========== MISS TASK ==========');
     
-    if (!state || !state.currentTaskId) {
-      console.log('❌ [useAppState] No state or current task available');
+    if (!state) {
+      console.log('❌ [useAppState] No state available');
       return;
     }
     
     const todayKey = getTodayKey();
     const todayTasks = state.tasks.filter(t => t.dayKey === todayKey);
-    const currentTask = todayTasks.find(t => t.id === state.currentTaskId);
+    const targetTask = todayTasks.find(t => t.id === taskId);
     
-    if (!currentTask) {
-      console.log('⚠️  [useAppState] Current task not found');
+    if (!targetTask) {
+      console.log('⚠️  [useAppState] Target task not found');
       return;
     }
     
-    console.log(`   Missing: "${currentTask.title}" (${currentTask.dueHour >= 0 ? `${currentTask.dueHour}:00` : 'anytime'})`);
+    console.log(`   Missing: "${targetTask.title}" (${targetTask.dueHour >= 0 ? `${targetTask.dueHour}:00` : 'anytime'})`);
+    
+    // Calculate XP change based on previous state
+    let newPetState = state.petState;
+    
+    // If task was previously completed, we need to remove the reward AND add the penalty
+    if (targetTask.isDone) {
+      console.log('🐾 [useAppState] Task was completed, reversing reward and adding penalty...');
+      // Reverse the completion reward
+      newPetState = missTask(newPetState);
+      // Add the miss penalty
+      newPetState = missTask(newPetState);
+    }
+    // If task was not missed before, just add the penalty
+    else if (!targetTask.isMissed) {
+      console.log('🐾 [useAppState] Applying XP penalty...');
+      newPetState = missTask(state.petState);
+    }
+    // If task was already missed, no XP change
+    else {
+      console.log('🐾 [useAppState] Task already missed, no XP change');
+    }
     
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     
     // Mark task as missed
     let updatedTasks = state.tasks.map(t => 
-      t.id === currentTask.id ? { ...t, isMissed: true, isDone: false, isSkipped: false } : t
+      t.id === taskId ? { ...t, isMissed: true, isDone: false, isSkipped: false } : t
     );
     
     // Move missed task to bottom
     const todayTaskIds = todayTasks.map(t => t.id);
     const todayTasksUpdated = updatedTasks.filter(t => todayTaskIds.includes(t.id));
     const otherTasks = updatedTasks.filter(t => !todayTaskIds.includes(t.id));
-    const reorderedTodayTasks = moveTaskToBottom(todayTasksUpdated, currentTask.id);
+    const reorderedTodayTasks = moveTaskToBottom(todayTasksUpdated, taskId);
     updatedTasks = [...otherTasks, ...reorderedTodayTasks];
     
-    // Find next pending task
+    // Find next pending task or keep current if it's still valid
     const nextPendingTask = reorderedTodayTasks.find(t => !t.isDone && !t.isSkipped && !t.isMissed);
     const newCurrentTaskId = nextPendingTask?.id || reorderedTodayTasks[0]?.id || null;
-    
-    console.log('🐾 [useAppState] Applying XP penalty...');
-    const newPetState = missTask(state.petState);
     
     await updateState({
       ...state,
@@ -310,12 +363,48 @@ export const useAppState = () => {
     console.log('✅ [useAppState] ========== TASK MISSED ==========');
   }, [state, updateState]);
 
+  // Legacy functions for backward compatibility
+  const completeCurrentTask = useCallback(async () => {
+    if (!state?.currentTaskId) return;
+    await completeTaskById(state.currentTaskId);
+  }, [state?.currentTaskId, completeTaskById]);
+
+  const skipCurrentTask = useCallback(async () => {
+    if (!state?.currentTaskId) return;
+    await skipTaskById(state.currentTaskId);
+  }, [state?.currentTaskId, skipTaskById]);
+
+  const missCurrentTask = useCallback(async () => {
+    if (!state?.currentTaskId) return;
+    await missTaskById(state.currentTaskId);
+  }, [state?.currentTaskId, missTaskById]);
+
   const reopenTask = useCallback(async (taskId: string) => {
     console.log(`🔓 [useAppState] Reopening task: ${taskId}`);
     
     if (!state) {
       console.log('❌ [useAppState] No state available');
       return;
+    }
+    
+    const targetTask = state.tasks.find(t => t.id === taskId);
+    if (!targetTask) {
+      console.log('⚠️  [useAppState] Target task not found');
+      return;
+    }
+    
+    // Calculate XP change based on previous state
+    let newPetState = state.petState;
+    
+    // If task was completed, reverse the reward
+    if (targetTask.isDone) {
+      console.log('🐾 [useAppState] Task was completed, reversing reward...');
+      newPetState = missTask(newPetState);
+    }
+    // If task was missed, reverse the penalty
+    else if (targetTask.isMissed) {
+      console.log('🐾 [useAppState] Task was missed, reversing penalty...');
+      newPetState = completeTask(newPetState);
     }
     
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -327,6 +416,7 @@ export const useAppState = () => {
     await updateState({
       ...state,
       tasks: updatedTasks,
+      petState: newPetState,
       currentTaskId: taskId, // Set reopened task as current
     });
     
@@ -590,6 +680,9 @@ export const useAppState = () => {
     state,
     loading,
     selectTask,
+    completeTaskById,
+    skipTaskById,
+    missTaskById,
     completeCurrentTask,
     skipCurrentTask,
     missCurrentTask,
