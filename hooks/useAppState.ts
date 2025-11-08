@@ -173,6 +173,7 @@ export const useAppState = () => {
     }
     
     console.log(`   Completing: "${targetTask.title}" (${targetTask.dueHour >= 0 ? `${targetTask.dueHour}:00` : 'anytime'})`);
+    console.log(`   Previous state - Done: ${targetTask.isDone}, Missed: ${targetTask.isMissed}, Skipped: ${targetTask.isSkipped}`);
     
     // Calculate XP change based on previous state
     let newPetState = state.petState;
@@ -244,6 +245,7 @@ export const useAppState = () => {
     }
     
     console.log(`   Skipping: "${targetTask.title}" (${targetTask.dueHour >= 0 ? `${targetTask.dueHour}:00` : 'anytime'})`);
+    console.log(`   Previous state - Done: ${targetTask.isDone}, Missed: ${targetTask.isMissed}, Skipped: ${targetTask.isSkipped}`);
     
     // Calculate XP change based on previous state
     let newPetState = state.petState;
@@ -310,6 +312,7 @@ export const useAppState = () => {
     }
     
     console.log(`   Missing: "${targetTask.title}" (${targetTask.dueHour >= 0 ? `${targetTask.dueHour}:00` : 'anytime'})`);
+    console.log(`   Previous state - Done: ${targetTask.isDone}, Missed: ${targetTask.isMissed}, Skipped: ${targetTask.isSkipped}`);
     
     // Calculate XP change based on previous state
     let newPetState = state.petState;
@@ -322,7 +325,12 @@ export const useAppState = () => {
       // Add the miss penalty
       newPetState = missTask(newPetState);
     }
-    // If task was not missed before, just add the penalty
+    // If task was previously skipped, just add the penalty
+    else if (targetTask.isSkipped) {
+      console.log('🐾 [useAppState] Task was skipped, adding penalty...');
+      newPetState = missTask(state.petState);
+    }
+    // If task was not missed before and not done/skipped, just add the penalty
     else if (!targetTask.isMissed) {
       console.log('🐾 [useAppState] Applying XP penalty...');
       newPetState = missTask(state.petState);
