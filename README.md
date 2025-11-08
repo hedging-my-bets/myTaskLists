@@ -1,7 +1,7 @@
 
 # PetProgress - iPhone Habits with an Evolving Pet
 
-PetProgress turns your iPhone Home Screen into a habit control panel. Track hourly tasks, watch your pet evolve with XP, and stay motivated with visual progress—all without opening the app.
+PetProgress turns your iPhone Home and Lock Screen into a habit control panel. Track hourly tasks, watch your pet evolve with XP, and stay motivated with visual progress—all without opening the app.
 
 ## ✨ Features
 
@@ -15,14 +15,14 @@ PetProgress turns your iPhone Home Screen into a habit control panel. Track hour
 - **30 Stages**: Egg → Chicken → ... → Dragon → CEO → Golden CEO
 - **25 XP per Task**: Earn experience by completing tasks
 - **Progressive Thresholds**: Steady 100 XP increments per stage (100, 200, 300... 3000)
-- **Level-Scaled Penalties**: Miss penalties scale from 1× to 3× as you level up
+- **Level-Scaled Penalties**: Miss penalties scale from 1× to 5x as you level up
 - **Visual Progress**: Watch your pet evolve in real-time
 
 ### ⏰ Smart Task Management
 - **Hourly Tasks**: Schedule tasks for specific hours
 - **Anytime Tasks**: Flexible tasks without time constraints
 - **Recurring Tasks**: Set up daily, weekly, or custom patterns
-- **Grace Period**: Configurable 0-30 minute grace window
+- **Grace Period**: Configurable 0-60 minute grace window
 - **Midnight Rollover**: Automatic task reset with XP penalties for missed tasks
 
 ### 🎨 Beautiful Design
@@ -75,14 +75,14 @@ PetProgress turns your iPhone Home Screen into a habit control panel. Track hour
 - **← Previous**: Navigate to previous task
 - **✓ Complete**: Award 25 XP, mark task as done
 - **✕ Miss**: Apply XP penalty, mark task as missed
-- **→ Skip**: Mark task as skipped (no XP change)
+- **⏲ Skip**: Mark task as skipped (no XP change even after midnight rollover)
 - **→ Next**: Navigate to next task
 
 ### Task Lifecycle
 
 1. **Create Tasks**: Add tasks in the Calendar tab with specific times or "anytime"
 2. **Track Progress**: Widget shows the current task based on time of day
-3. **Take Action**: Complete, skip, or miss tasks directly from the widget
+3. **Take Action**: Complete, skip, next, previous or miss tasks directly from the widget
 4. **Earn XP**: Gain 25 XP for each completed task
 5. **Watch Evolution**: Pet evolves as you cross XP thresholds
 6. **Midnight Rollover**: Undone tasks become "missed" and apply XP penalties
@@ -93,7 +93,7 @@ PetProgress turns your iPhone Home Screen into a habit control panel. Track hour
 - **Loss**: Level-scaled penalty for missed tasks
   - Level 1: 1× penalty (25 XP)
   - Level 15: 2× penalty (50 XP)
-  - Level 30: 3× penalty (75 XP)
+  - Level 30: 5× penalty (12 XP)
 - **Evolution**: Pet evolves when XP crosses stage thresholds
 - **De-evolution**: Pet can de-evolve if XP drops below current stage
 
@@ -105,27 +105,27 @@ The pet evolution system uses a **progressive XP model** with 30 stages. Each st
 |-------|------|-------------|---------------|
 | 0 | Egg 🥚 | 0 | 0 |
 | 1 | Chicken 🐔 | 100 | 4 |
-| 2 | Weasel 🦡 | 200 | 8 |
-| 3 | Badger 🦡 | 300 | 12 |
-| 4 | Hawk 🦅 | 400 | 16 |
+| 2 | Pidgeon  | 200 | 8 |
+| 3 | Hawk  | 300 | 12 |
+| 4 |  Salmon  | 400 | 16 |
 | 5 | Barracuda 🐟 | 500 | 20 |
-| 6 | Coyote 🐺 | 600 | 24 |
-| 7 | Wild Boar 🐗 | 700 | 28 |
+| 6 | Sword Fish   | 600 | 24 |
+| 7 | Dog 🐗 | 700 | 28 |
 | 8 | Wolf 🐺 | 800 | 32 |
 | 9 | Crocodile 🐊 | 900 | 36 |
-| 10 | Mako Shark 🦈 | 1,000 | 40 |
+| 10 | Baby Shark 🦈 | 1,000 | 40 |
 | 11 | Great White Shark 🦈 | 1,100 | 44 |
 | 12 | Orca 🐋 | 1,200 | 48 |
-| 13 | Bison 🦬 | 1,300 | 52 |
+| 13 | Puma  | 1,300 | 52 |
 | 14 | Bull 🐂 | 1,400 | 56 |
-| 15 | Stallion 🐴 | 1,500 | 60 |
+| 15 | Giraffe  | 1,500 | 60 |
 | 16 | Grizzly Bear 🐻 | 1,600 | 64 |
 | 17 | Polar Bear 🐻‍❄️ | 1,700 | 68 |
 | 18 | Rhinoceros 🦏 | 1,800 | 72 |
 | 19 | Hippopotamus 🦛 | 1,900 | 76 |
 | 20 | Elephant 🐘 | 2,000 | 80 |
-| 21 | Silver Back Gorilla 🦍 | 2,100 | 84 |
-| 22 | Cape Buffalo 🐃 | 2,200 | 88 |
+| 21 | Baby Gorilla 🦍 | 2,100 | 84 |
+| 22 | Silver Back Gorilla 🐃 | 2,200 | 88 |
 | 23 | Lion 🦁 | 2,300 | 92 |
 | 24 | Komodo Dragon 🦎 | 2,400 | 96 |
 | 25 | Eagle 🦅 | 2,500 | 100 |
@@ -133,7 +133,7 @@ The pet evolution system uses a **progressive XP model** with 30 stages. Each st
 | 27 | Dragon 🐉 | 2,700 | 108 |
 | 28 | Human CEO 👔 | 2,800 | 112 |
 | 29 | Golden CEO 👑 | 2,900 | 116 |
-| 30 | Legendary ⭐ | 3,000 | 120 |
+| 30 | Legendary, Mythic CEO ⭐ | 3,000 | 120 |
 
 *Tasks needed assumes 25 XP per task with no misses
 
