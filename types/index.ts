@@ -12,6 +12,7 @@ export interface Task {
   isRecurring?: boolean; // true if task repeats
   recurringDays?: number[]; // 0-6 (Sunday-Saturday) for recurring tasks
   templateId?: string; // ID of the template task for recurring tasks
+  order?: number; // Order in the list (for manual reordering)
 }
 
 export interface PetState {
@@ -28,7 +29,7 @@ export interface AppState {
   tasks: Task[];
   petState: PetState;
   settings: Settings;
-  currentTaskIndex: number;
+  currentTaskId: string | null; // Changed from currentTaskIndex to currentTaskId
   lastRolloverDate: string; // YYYY-MM-DD
   taskTemplates: TaskTemplate[]; // Templates for recurring tasks
 }

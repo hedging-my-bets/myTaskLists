@@ -7,7 +7,7 @@ import Animated, { FadeInDown, Layout } from 'react-native-reanimated';
 
 interface TaskListProps {
   tasks: Task[];
-  currentTaskId: string;
+  currentTaskId: string | null;
   onTaskPress?: (task: Task) => void;
 }
 
@@ -41,8 +41,8 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, currentTaskId, onTaskPress }
   };
 
   const handleTaskPress = (task: Task) => {
-    // Allow reopening skipped tasks
-    if (task.isSkipped && onTaskPress) {
+    console.log(`📋 [TaskList] Task pressed: ${task.id} - "${task.title}"`);
+    if (onTaskPress) {
       onTaskPress(task);
     }
   };
@@ -53,8 +53,7 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, currentTaskId, onTaskPress }
         <TouchableOpacity
           key={task.id}
           onPress={() => handleTaskPress(task)}
-          activeOpacity={task.isSkipped ? 0.7 : 1}
-          disabled={!task.isSkipped}
+          activeOpacity={0.7}
         >
           <Animated.View
             entering={FadeInDown.delay(index * 50).duration(300)}
@@ -98,6 +97,16 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, currentTaskId, onTaskPress }
                     numberOfLines={2}
                   >
                     {task.description}
+                  </Text>
+                )}
+                {task.id === currentTaskId && (
+                  <Text
+                    style={[
+                      styles.currentTaskLabel,
+                      { color: theme.primary },
+                    ]}
+                  >
+                    Current Task
                   </Text>
                 )}
                 {task.isSkipped && (
@@ -166,6 +175,13 @@ const styles = StyleSheet.create({
   taskTime: {
     fontSize: typography.bodySmall.fontSize,
     fontWeight: '500',
+  },
+  currentTaskLabel: {
+    fontSize: typography.caption.fontSize,
+    fontWeight: '700',
+    marginTop: spacing.xs,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   tapToReopen: {
     fontSize: typography.caption.fontSize,

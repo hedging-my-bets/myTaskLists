@@ -49,9 +49,9 @@ export const handleCompleteAction = async (
   
   const todayKey = getTodayKey();
   const todayTasks = state.tasks.filter(t => t.dayKey === todayKey);
-  const currentTask = todayTasks[state.currentTaskIndex];
+  const currentTask = todayTasks.find(t => t.id === state.currentTaskId);
   
-  console.log(`   Current task index: ${state.currentTaskIndex}`);
+  console.log(`   Current task ID: ${state.currentTaskId}`);
   console.log(`   Today's tasks: ${todayTasks.length}`);
   
   if (!currentTask) {
@@ -85,9 +85,10 @@ export const handleCompleteAction = async (
   await updateState(newState);
   
   console.log('🔄 [deeplinks] Syncing widget...');
+  const currentTaskIndex = todayTasks.findIndex(t => t.id === state.currentTaskId);
   await syncWidgetState(
     newState.tasks,
-    newState.currentTaskIndex,
+    Math.max(0, currentTaskIndex),
     newState.petState,
     newState.settings,
     newState.lastRolloverDate
@@ -110,9 +111,9 @@ export const handleSkipAction = async (
   
   const todayKey = getTodayKey();
   const todayTasks = state.tasks.filter(t => t.dayKey === todayKey);
-  const currentTask = todayTasks[state.currentTaskIndex];
+  const currentTask = todayTasks.find(t => t.id === state.currentTaskId);
   
-  console.log(`   Current task index: ${state.currentTaskIndex}`);
+  console.log(`   Current task ID: ${state.currentTaskId}`);
   console.log(`   Today's tasks: ${todayTasks.length}`);
   
   if (!currentTask) {
@@ -142,9 +143,10 @@ export const handleSkipAction = async (
   await updateState(newState);
   
   console.log('🔄 [deeplinks] Syncing widget...');
+  const currentTaskIndex = todayTasks.findIndex(t => t.id === state.currentTaskId);
   await syncWidgetState(
     newState.tasks,
-    newState.currentTaskIndex,
+    Math.max(0, currentTaskIndex),
     newState.petState,
     newState.settings,
     newState.lastRolloverDate
@@ -167,9 +169,9 @@ export const handleMissAction = async (
   
   const todayKey = getTodayKey();
   const todayTasks = state.tasks.filter(t => t.dayKey === todayKey);
-  const currentTask = todayTasks[state.currentTaskIndex];
+  const currentTask = todayTasks.find(t => t.id === state.currentTaskId);
   
-  console.log(`   Current task index: ${state.currentTaskIndex}`);
+  console.log(`   Current task ID: ${state.currentTaskId}`);
   console.log(`   Today's tasks: ${todayTasks.length}`);
   
   if (!currentTask) {
@@ -203,9 +205,10 @@ export const handleMissAction = async (
   await updateState(newState);
   
   console.log('🔄 [deeplinks] Syncing widget...');
+  const currentTaskIndex = todayTasks.findIndex(t => t.id === state.currentTaskId);
   await syncWidgetState(
     newState.tasks,
-    newState.currentTaskIndex,
+    Math.max(0, currentTaskIndex),
     newState.petState,
     newState.settings,
     newState.lastRolloverDate
@@ -228,17 +231,25 @@ export const handleNextAction = async (
   
   const todayKey = getTodayKey();
   const todayTasks = state.tasks.filter(t => t.dayKey === todayKey);
-  const newIndex = (state.currentTaskIndex + 1) % todayTasks.length;
   
-  console.log(`   Current index: ${state.currentTaskIndex}`);
-  console.log(`   New index: ${newIndex}`);
+  if (todayTasks.length === 0) {
+    console.log('⚠️  [deeplinks] No tasks available');
+    return;
+  }
+  
+  const currentIndex = todayTasks.findIndex(t => t.id === state.currentTaskId);
+  const nextIndex = (currentIndex + 1) % todayTasks.length;
+  const nextTaskId = todayTasks[nextIndex].id;
+  
+  console.log(`   Current task ID: ${state.currentTaskId}`);
+  console.log(`   Next task ID: ${nextTaskId}`);
   console.log(`   Total tasks: ${todayTasks.length}`);
   
   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   
   const newState = {
     ...state,
-    currentTaskIndex: newIndex,
+    currentTaskId: nextTaskId,
   };
   
   console.log('💾 [deeplinks] Updating state...');
@@ -247,7 +258,7 @@ export const handleNextAction = async (
   console.log('🔄 [deeplinks] Syncing widget...');
   await syncWidgetState(
     newState.tasks,
-    newState.currentTaskIndex,
+    nextIndex,
     newState.petState,
     newState.settings,
     newState.lastRolloverDate
@@ -270,17 +281,25 @@ export const handlePrevAction = async (
   
   const todayKey = getTodayKey();
   const todayTasks = state.tasks.filter(t => t.dayKey === todayKey);
-  const newIndex = state.currentTaskIndex === 0 ? todayTasks.length - 1 : state.currentTaskIndex - 1;
   
-  console.log(`   Current index: ${state.currentTaskIndex}`);
-  console.log(`   New index: ${newIndex}`);
+  if (todayTasks.length === 0) {
+    console.log('⚠️  [deeplinks] No tasks available');
+    return;
+  }
+  
+  const currentIndex = todayTasks.findIndex(t => t.id === state.currentTaskId);
+  const prevIndex = currentIndex === 0 ? todayTasks.length - 1 : currentIndex - 1;
+  const prevTaskId = todayTasks[prevIndex].id;
+  
+  console.log(`   Current task ID: ${state.currentTaskId}`);
+  console.log(`   Previous task ID: ${prevTaskId}`);
   console.log(`   Total tasks: ${todayTasks.length}`);
   
   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   
   const newState = {
     ...state,
-    currentTaskIndex: newIndex,
+    currentTaskId: prevTaskId,
   };
   
   console.log('💾 [deeplinks] Updating state...');
@@ -289,7 +308,7 @@ export const handlePrevAction = async (
   console.log('🔄 [deeplinks] Syncing widget...');
   await syncWidgetState(
     newState.tasks,
-    newState.currentTaskIndex,
+    prevIndex,
     newState.petState,
     newState.settings,
     newState.lastRolloverDate

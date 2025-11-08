@@ -142,18 +142,23 @@ export const performRollover = (state: AppState): AppState => {
   console.log(`   Applying XP penalty for ${missedCount} missed tasks...`);
   const newPetState = penalizeMissedTasks(state.petState, missedCount, XP_PER_TASK);
   
+  // Set currentTaskId to first pending task of the new day
+  const firstPendingTask = newTasks.find(t => !t.isDone && !t.isSkipped && !t.isMissed);
+  const newCurrentTaskId = firstPendingTask?.id || newTasks[0]?.id || null;
+  
   const newState = {
     ...state,
     tasks: [...updatedOldTasks, ...newTasks],
     petState: newPetState,
     lastRolloverDate: today,
-    currentTaskIndex: 0,
+    currentTaskId: newCurrentTaskId,
   };
   
   console.log('✅ [taskLogic] ========== ROLLOVER COMPLETE ==========');
   console.log(`   Total tasks: ${newState.tasks.length}`);
   console.log(`   Pet XP: ${state.petState.xp} → ${newPetState.xp}`);
   console.log(`   Pet Stage: ${state.petState.stageIndex} → ${newPetState.stageIndex}`);
+  console.log(`   New current task ID: ${newCurrentTaskId}`);
   
   return newState;
 };

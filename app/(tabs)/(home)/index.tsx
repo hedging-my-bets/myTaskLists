@@ -11,6 +11,7 @@ import { Stack } from 'expo-router';
 import TaskList from '@/components/TaskList';
 import { useAppState } from '@/hooks/useAppState';
 import { IconSymbol } from '@/components/IconSymbol';
+import { Task } from '@/types';
 
 const styles = StyleSheet.create({
   container: {
@@ -64,6 +65,7 @@ export default function HomeScreen() {
   const {
     state,
     loading,
+    selectTask,
     completeCurrentTask,
     skipCurrentTask,
     missCurrentTask,
@@ -86,10 +88,21 @@ export default function HomeScreen() {
   }, [state, todayKey]);
 
   const currentTask = useMemo(() => {
-    if (todayTasks.length === 0) return null;
-    const validIndex = Math.min(state?.currentTaskIndex || 0, todayTasks.length - 1);
-    return todayTasks[validIndex];
-  }, [todayTasks, state?.currentTaskIndex]);
+    if (!state || !state.currentTaskId) return null;
+    return todayTasks.find(t => t.id === state.currentTaskId) || null;
+  }, [todayTasks, state?.currentTaskId]);
+
+  const handleTaskPress = (task: Task) => {
+    console.log(`🎯 [HomeScreen] Task selected: ${task.id} - "${task.title}"`);
+    
+    // If task is skipped, reopen it
+    if (task.isSkipped) {
+      reopenTask(task.id);
+    } else {
+      // Otherwise, just select it as the current task
+      selectTask(task.id);
+    }
+  };
 
   const showDebugInfo = () => {
     if (!state) return;
@@ -100,7 +113,7 @@ export default function HomeScreen() {
 📊 App State:
 - Total tasks: ${state.tasks.length}
 - Today's tasks: ${todayTasks.length}
-- Current index: ${state.currentTaskIndex}
+- Current task ID: ${state.currentTaskId || 'None'}
 - Pet XP: ${state.petState.xp}
 - Pet Stage: ${state.petState.stageIndex + 1}
 - Grace minutes: ${state.settings.graceMinutes}
@@ -204,7 +217,7 @@ ${currentTask ? `
                 onEditTitle={editTaskTitle}
                 onEditDescription={editTaskDescription}
                 onReopenTask={reopenTask}
-                taskNumber={state.currentTaskIndex + 1}
+                taskNumber={todayTasks.findIndex(t => t.id === currentTask.id) + 1}
                 totalTasks={todayTasks.length}
               />
             </Animated.View>
@@ -218,7 +231,8 @@ ${currentTask ? `
               </Text>
               <TaskList
                 tasks={todayTasks}
-                currentTaskId={currentTask?.id || ''}
+                currentTaskId={state.currentTaskId}
+                onTaskPress={handleTaskPress}
               />
             </Animated.View>
           )}

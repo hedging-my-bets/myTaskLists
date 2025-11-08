@@ -56,18 +56,37 @@ export const useAppState = () => {
         await saveAppState(loadedState);
       }
       
-      // Update current task index to nearest task
-      console.log('🎯 [useAppState] Finding nearest task...');
-      const nearestIndex = getNearestTaskIndex(loadedState.tasks, loadedState.settings.graceMinutes);
-      loadedState.currentTaskIndex = nearestIndex;
+      // Migrate from currentTaskIndex to currentTaskId if needed
+      if ('currentTaskIndex' in loadedState && !loadedState.currentTaskId) {
+        const todayKey = getTodayKey();
+        const todayTasks = loadedState.tasks.filter(t => t.dayKey === todayKey);
+        const index = (loadedState as any).currentTaskIndex || 0;
+        if (todayTasks.length > 0 && index < todayTasks.length) {
+          loadedState.currentTaskId = todayTasks[index].id;
+        } else {
+          loadedState.currentTaskId = todayTasks[0]?.id || null;
+        }
+        console.log('🔄 [useAppState] Migrated from currentTaskIndex to currentTaskId');
+      }
+      
+      // Set current task to first pending task if not set or invalid
+      const todayKey = getTodayKey();
+      const todayTasks = loadedState.tasks.filter(t => t.dayKey === todayKey);
+      
+      if (!loadedState.currentTaskId || !todayTasks.find(t => t.id === loadedState.currentTaskId)) {
+        const firstPendingTask = todayTasks.find(t => !t.isDone && !t.isSkipped && !t.isMissed);
+        loadedState.currentTaskId = firstPendingTask?.id || todayTasks[0]?.id || null;
+        console.log('🎯 [useAppState] Set current task to first pending task');
+      }
       
       setState(loadedState);
       
       console.log('🔄 [useAppState] Syncing widget state...');
       // Sync widget state
+      const currentTaskIndex = todayTasks.findIndex(t => t.id === loadedState.currentTaskId);
       await syncWidgetState(
         loadedState.tasks,
-        loadedState.currentTaskIndex,
+        Math.max(0, currentTaskIndex),
         loadedState.petState,
         loadedState.settings,
         loadedState.lastRolloverDate
@@ -86,16 +105,20 @@ export const useAppState = () => {
     console.log(`   Tasks: ${newState.tasks.length}`);
     console.log(`   Pet XP: ${newState.petState.xp}`);
     console.log(`   Pet Stage: ${newState.petState.stageIndex}`);
-    console.log(`   Current index: ${newState.currentTaskIndex}`);
+    console.log(`   Current task ID: ${newState.currentTaskId}`);
     
     setState(newState);
     await saveAppState(newState);
     
     console.log('🔄 [useAppState] Syncing widget after state update...');
     // Sync widget state after every update
+    const todayKey = getTodayKey();
+    const todayTasks = newState.tasks.filter(t => t.dayKey === todayKey);
+    const currentTaskIndex = todayTasks.findIndex(t => t.id === newState.currentTaskId);
+    
     await syncWidgetState(
       newState.tasks,
-      newState.currentTaskIndex,
+      Math.max(0, currentTaskIndex),
       newState.petState,
       newState.settings,
       newState.lastRolloverDate
@@ -104,24 +127,48 @@ export const useAppState = () => {
     console.log('✅ [useAppState] State updated and synced');
   }, []);
 
-  const completeCurrentTask = useCallback(async () => {
-    console.log('✅ [useAppState] ========== COMPLETE TASK ==========');
+  const moveTaskToBottom = (tasks: Task[], taskId: string): Task[] => {
+    const taskIndex = tasks.findIndex(t => t.id === taskId);
+    if (taskIndex === -1) return tasks;
+    
+    const task = tasks[taskIndex];
+    const otherTasks = tasks.filter(t => t.id !== taskId);
+    
+    return [...otherTasks, task];
+  };
+
+  const selectTask = useCallback(async (taskId: string) => {
+    console.log(`🎯 [useAppState] Selecting task: ${taskId}`);
     
     if (!state) {
       console.log('❌ [useAppState] No state available');
       return;
     }
     
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
+    await updateState({
+      ...state,
+      currentTaskId: taskId,
+    });
+    
+    console.log('✅ [useAppState] Task selected');
+  }, [state, updateState]);
+
+  const completeCurrentTask = useCallback(async () => {
+    console.log('✅ [useAppState] ========== COMPLETE TASK ==========');
+    
+    if (!state || !state.currentTaskId) {
+      console.log('❌ [useAppState] No state or current task available');
+      return;
+    }
+    
     const todayKey = getTodayKey();
     const todayTasks = state.tasks.filter(t => t.dayKey === todayKey);
-    
-    console.log(`   Today's tasks: ${todayTasks.length}`);
-    
-    // Find the first pending task
-    const currentTask = todayTasks.find(t => !t.isDone && !t.isSkipped && !t.isMissed);
+    const currentTask = todayTasks.find(t => t.id === state.currentTaskId);
     
     if (!currentTask) {
-      console.log('⚠️  [useAppState] No pending task to complete');
+      console.log('⚠️  [useAppState] Current task not found');
       return;
     }
     
@@ -129,9 +176,21 @@ export const useAppState = () => {
     
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     
-    const updatedTasks = state.tasks.map(t => 
+    // Mark task as done
+    let updatedTasks = state.tasks.map(t => 
       t.id === currentTask.id ? { ...t, isDone: true, isSkipped: false, isMissed: false } : t
     );
+    
+    // Move completed task to bottom
+    const todayTaskIds = todayTasks.map(t => t.id);
+    const todayTasksUpdated = updatedTasks.filter(t => todayTaskIds.includes(t.id));
+    const otherTasks = updatedTasks.filter(t => !todayTaskIds.includes(t.id));
+    const reorderedTodayTasks = moveTaskToBottom(todayTasksUpdated, currentTask.id);
+    updatedTasks = [...otherTasks, ...reorderedTodayTasks];
+    
+    // Find next pending task
+    const nextPendingTask = reorderedTodayTasks.find(t => !t.isDone && !t.isSkipped && !t.isMissed);
+    const newCurrentTaskId = nextPendingTask?.id || reorderedTodayTasks[0]?.id || null;
     
     console.log('🐾 [useAppState] Calculating XP gain...');
     const newPetState = completeTask(state.petState);
@@ -140,6 +199,7 @@ export const useAppState = () => {
       ...state,
       tasks: updatedTasks,
       petState: newPetState,
+      currentTaskId: newCurrentTaskId,
     });
     
     console.log('🔄 [useAppState] Requesting widget reload...');
@@ -151,19 +211,17 @@ export const useAppState = () => {
   const skipCurrentTask = useCallback(async () => {
     console.log('⏭️  [useAppState] ========== SKIP TASK ==========');
     
-    if (!state) {
-      console.log('❌ [useAppState] No state available');
+    if (!state || !state.currentTaskId) {
+      console.log('❌ [useAppState] No state or current task available');
       return;
     }
     
     const todayKey = getTodayKey();
     const todayTasks = state.tasks.filter(t => t.dayKey === todayKey);
-    
-    // Find the first pending task
-    const currentTask = todayTasks.find(t => !t.isDone && !t.isSkipped && !t.isMissed);
+    const currentTask = todayTasks.find(t => t.id === state.currentTaskId);
     
     if (!currentTask) {
-      console.log('⚠️  [useAppState] No pending task to skip');
+      console.log('⚠️  [useAppState] Current task not found');
       return;
     }
     
@@ -171,13 +229,26 @@ export const useAppState = () => {
     
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     
-    const updatedTasks = state.tasks.map(t => 
+    // Mark task as skipped
+    let updatedTasks = state.tasks.map(t => 
       t.id === currentTask.id ? { ...t, isSkipped: true, isDone: false, isMissed: false } : t
     );
+    
+    // Move skipped task to bottom
+    const todayTaskIds = todayTasks.map(t => t.id);
+    const todayTasksUpdated = updatedTasks.filter(t => todayTaskIds.includes(t.id));
+    const otherTasks = updatedTasks.filter(t => !todayTaskIds.includes(t.id));
+    const reorderedTodayTasks = moveTaskToBottom(todayTasksUpdated, currentTask.id);
+    updatedTasks = [...otherTasks, ...reorderedTodayTasks];
+    
+    // Find next pending task
+    const nextPendingTask = reorderedTodayTasks.find(t => !t.isDone && !t.isSkipped && !t.isMissed);
+    const newCurrentTaskId = nextPendingTask?.id || reorderedTodayTasks[0]?.id || null;
     
     await updateState({
       ...state,
       tasks: updatedTasks,
+      currentTaskId: newCurrentTaskId,
     });
     
     console.log('🔄 [useAppState] Requesting widget reload...');
@@ -189,19 +260,17 @@ export const useAppState = () => {
   const missCurrentTask = useCallback(async () => {
     console.log('❌ [useAppState] ========== MISS TASK ==========');
     
-    if (!state) {
-      console.log('❌ [useAppState] No state available');
+    if (!state || !state.currentTaskId) {
+      console.log('❌ [useAppState] No state or current task available');
       return;
     }
     
     const todayKey = getTodayKey();
     const todayTasks = state.tasks.filter(t => t.dayKey === todayKey);
-    
-    // Find the first pending task
-    const currentTask = todayTasks.find(t => !t.isDone && !t.isSkipped && !t.isMissed);
+    const currentTask = todayTasks.find(t => t.id === state.currentTaskId);
     
     if (!currentTask) {
-      console.log('⚠️  [useAppState] No pending task to miss');
+      console.log('⚠️  [useAppState] Current task not found');
       return;
     }
     
@@ -209,9 +278,21 @@ export const useAppState = () => {
     
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     
-    const updatedTasks = state.tasks.map(t => 
+    // Mark task as missed
+    let updatedTasks = state.tasks.map(t => 
       t.id === currentTask.id ? { ...t, isMissed: true, isDone: false, isSkipped: false } : t
     );
+    
+    // Move missed task to bottom
+    const todayTaskIds = todayTasks.map(t => t.id);
+    const todayTasksUpdated = updatedTasks.filter(t => todayTaskIds.includes(t.id));
+    const otherTasks = updatedTasks.filter(t => !todayTaskIds.includes(t.id));
+    const reorderedTodayTasks = moveTaskToBottom(todayTasksUpdated, currentTask.id);
+    updatedTasks = [...otherTasks, ...reorderedTodayTasks];
+    
+    // Find next pending task
+    const nextPendingTask = reorderedTodayTasks.find(t => !t.isDone && !t.isSkipped && !t.isMissed);
+    const newCurrentTaskId = nextPendingTask?.id || reorderedTodayTasks[0]?.id || null;
     
     console.log('🐾 [useAppState] Applying XP penalty...');
     const newPetState = missTask(state.petState);
@@ -220,6 +301,7 @@ export const useAppState = () => {
       ...state,
       tasks: updatedTasks,
       petState: newPetState,
+      currentTaskId: newCurrentTaskId,
     });
     
     console.log('🔄 [useAppState] Requesting widget reload...');
@@ -245,6 +327,7 @@ export const useAppState = () => {
     await updateState({
       ...state,
       tasks: updatedTasks,
+      currentTaskId: taskId, // Set reopened task as current
     });
     
     console.log('🔄 [useAppState] Requesting widget reload...');
@@ -263,15 +346,23 @@ export const useAppState = () => {
     
     const todayKey = getTodayKey();
     const todayTasks = state.tasks.filter(t => t.dayKey === todayKey);
-    const newIndex = (state.currentTaskIndex + 1) % todayTasks.length;
     
-    console.log(`   Index: ${state.currentTaskIndex} → ${newIndex}`);
+    if (todayTasks.length === 0) {
+      console.log('⚠️  [useAppState] No tasks available');
+      return;
+    }
+    
+    const currentIndex = todayTasks.findIndex(t => t.id === state.currentTaskId);
+    const nextIndex = (currentIndex + 1) % todayTasks.length;
+    const nextTaskId = todayTasks[nextIndex].id;
+    
+    console.log(`   Task: ${state.currentTaskId} → ${nextTaskId}`);
     
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     
     await updateState({
       ...state,
-      currentTaskIndex: newIndex,
+      currentTaskId: nextTaskId,
     });
     
     console.log('🔄 [useAppState] Requesting widget reload...');
@@ -290,15 +381,23 @@ export const useAppState = () => {
     
     const todayKey = getTodayKey();
     const todayTasks = state.tasks.filter(t => t.dayKey === todayKey);
-    const newIndex = state.currentTaskIndex === 0 ? todayTasks.length - 1 : state.currentTaskIndex - 1;
     
-    console.log(`   Index: ${state.currentTaskIndex} → ${newIndex}`);
+    if (todayTasks.length === 0) {
+      console.log('⚠️  [useAppState] No tasks available');
+      return;
+    }
+    
+    const currentIndex = todayTasks.findIndex(t => t.id === state.currentTaskId);
+    const prevIndex = currentIndex === 0 ? todayTasks.length - 1 : currentIndex - 1;
+    const prevTaskId = todayTasks[prevIndex].id;
+    
+    console.log(`   Task: ${state.currentTaskId} → ${prevTaskId}`);
     
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     
     await updateState({
       ...state,
-      currentTaskIndex: newIndex,
+      currentTaskId: prevTaskId,
     });
     
     console.log('🔄 [useAppState] Requesting widget reload...');
@@ -417,6 +516,21 @@ export const useAppState = () => {
       };
       newTasks.push(newTask);
       console.log(`   ✅ Created task for ${taskDate}`);
+      
+      // Set as current task if it's the first task for today
+      const todayKey = getTodayKey();
+      if (taskDate === todayKey && !state.currentTaskId) {
+        await updateState({
+          ...state,
+          taskTemplates: updatedTemplates,
+          tasks: newTasks,
+          currentTaskId: newTask.id,
+        });
+        console.log('🔄 [useAppState] Requesting widget reload...');
+        await requestWidgetReload();
+        console.log('✅ [useAppState] Task template added');
+        return;
+      }
     } else {
       console.log(`   ⏭️  Skipped task creation (not scheduled for day ${dayOfWeek})`);
     }
@@ -448,11 +562,22 @@ export const useAppState = () => {
     console.log(`   Removing ${tasksToRemove.length} associated tasks`);
     
     const updatedTasks = state.tasks.filter(t => t.templateId !== templateId);
+    
+    // If current task was deleted, select a new one
+    let newCurrentTaskId = state.currentTaskId;
+    if (tasksToRemove.some(t => t.id === state.currentTaskId)) {
+      const todayKey = getTodayKey();
+      const todayTasks = updatedTasks.filter(t => t.dayKey === todayKey);
+      const firstPendingTask = todayTasks.find(t => !t.isDone && !t.isSkipped && !t.isMissed);
+      newCurrentTaskId = firstPendingTask?.id || todayTasks[0]?.id || null;
+      console.log(`   Current task was deleted, selecting new task: ${newCurrentTaskId}`);
+    }
 
     await updateState({
       ...state,
       taskTemplates: updatedTemplates,
       tasks: updatedTasks,
+      currentTaskId: newCurrentTaskId,
     });
 
     console.log('🔄 [useAppState] Requesting widget reload...');
@@ -464,6 +589,7 @@ export const useAppState = () => {
   return {
     state,
     loading,
+    selectTask,
     completeCurrentTask,
     skipCurrentTask,
     missCurrentTask,

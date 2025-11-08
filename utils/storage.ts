@@ -38,6 +38,7 @@ export const generateTasksFromTemplates = (templates: TaskTemplate[], dayKey: st
     const newTask = {
       id: `${dayKey}-${template.id}`,
       title: template.title,
+      description: template.description,
       dueHour: template.dueHour,
       dayKey,
       isDone: false,
@@ -117,12 +118,13 @@ export const loadAppState = async (): Promise<AppState> => {
   try {
     const stored = await AsyncStorage.getItem(STORAGE_KEY);
     if (stored) {
-      const parsed = JSON.parse(stored) as AppState;
+      const parsed = JSON.parse(stored) as any;
       console.log('✅ [storage] Loaded app state from storage:');
       console.log(`   - Tasks: ${parsed.tasks.length}`);
       console.log(`   - Pet XP: ${parsed.petState?.xp}`);
       console.log(`   - Pet Stage: ${parsed.petState?.stageIndex}`);
       console.log(`   - Current task index: ${parsed.currentTaskIndex}`);
+      console.log(`   - Current task ID: ${parsed.currentTaskId}`);
       console.log(`   - Last rollover: ${parsed.lastRolloverDate}`);
       console.log(`   - Templates: ${parsed.taskTemplates?.length || 0}`);
       
@@ -139,7 +141,29 @@ export const loadAppState = async (): Promise<AppState> => {
         parsed.petState = { ...DEFAULT_PET_STATE };
       }
       
-      return parsed;
+      // Migrate from currentTaskIndex to currentTaskId if needed
+      if ('currentTaskIndex' in parsed && !parsed.currentTaskId) {
+        const todayKey = getTodayKey();
+        const todayTasks = parsed.tasks.filter((t: Task) => t.dayKey === todayKey);
+        const index = parsed.currentTaskIndex || 0;
+        if (todayTasks.length > 0 && index < todayTasks.length) {
+          parsed.currentTaskId = todayTasks[index].id;
+        } else {
+          parsed.currentTaskId = todayTasks[0]?.id || null;
+        }
+        console.log('🔄 [storage] Migrated from currentTaskIndex to currentTaskId:', parsed.currentTaskId);
+        delete parsed.currentTaskIndex;
+      }
+      
+      // Ensure currentTaskId exists
+      if (!parsed.currentTaskId) {
+        const todayKey = getTodayKey();
+        const todayTasks = parsed.tasks.filter((t: Task) => t.dayKey === todayKey);
+        parsed.currentTaskId = todayTasks[0]?.id || null;
+        console.log('⚠️  [storage] Set missing currentTaskId:', parsed.currentTaskId);
+      }
+      
+      return parsed as AppState;
     }
     
     console.log('⚠️  [storage] No stored state found, creating default state');
@@ -148,16 +172,18 @@ export const loadAppState = async (): Promise<AppState> => {
   }
 
   const today = getTodayKey();
+  const defaultTasks = getDefaultTasks(today);
   const defaultState: AppState = {
-    tasks: getDefaultTasks(today),
+    tasks: defaultTasks,
     petState: { ...DEFAULT_PET_STATE }, // Create a new object to avoid reference issues
     settings: { ...DEFAULT_SETTINGS },
-    currentTaskIndex: 0,
+    currentTaskId: defaultTasks[0]?.id || null,
     lastRolloverDate: today,
     taskTemplates: [],
   };
   
   console.log('💾 [storage] Creating default state with petState:', defaultState.petState);
+  console.log('💾 [storage] Creating default state with currentTaskId:', defaultState.currentTaskId);
   console.log('💾 [storage] Saving default state...');
   await saveAppState(defaultState);
   return defaultState;
@@ -168,7 +194,7 @@ export const saveAppState = async (state: AppState): Promise<void> => {
   console.log(`   - Tasks: ${state.tasks.length}`);
   console.log(`   - Pet XP: ${state.petState.xp}`);
   console.log(`   - Pet Stage: ${state.petState.stageIndex}`);
-  console.log(`   - Current task index: ${state.currentTaskIndex}`);
+  console.log(`   - Current task ID: ${state.currentTaskId}`);
   console.log(`   - Last rollover: ${state.lastRolloverDate}`);
   
   try {
