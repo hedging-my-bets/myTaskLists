@@ -14,6 +14,8 @@ const DEFAULT_PET_STATE: PetState = {
   stageIndex: 0,
 };
 
+console.log('🐾 [storage] DEFAULT_PET_STATE initialized:', DEFAULT_PET_STATE);
+
 export const generateTasksFromTemplates = (templates: TaskTemplate[], dayKey: string): Task[] => {
   console.log(`📋 [storage] Generating tasks from ${templates.length} templates for ${dayKey}`);
   
@@ -118,8 +120,8 @@ export const loadAppState = async (): Promise<AppState> => {
       const parsed = JSON.parse(stored) as AppState;
       console.log('✅ [storage] Loaded app state from storage:');
       console.log(`   - Tasks: ${parsed.tasks.length}`);
-      console.log(`   - Pet XP: ${parsed.petState.xp}`);
-      console.log(`   - Pet Stage: ${parsed.petState.stageIndex}`);
+      console.log(`   - Pet XP: ${parsed.petState?.xp}`);
+      console.log(`   - Pet Stage: ${parsed.petState?.stageIndex}`);
       console.log(`   - Current task index: ${parsed.currentTaskIndex}`);
       console.log(`   - Last rollover: ${parsed.lastRolloverDate}`);
       console.log(`   - Templates: ${parsed.taskTemplates?.length || 0}`);
@@ -128,6 +130,13 @@ export const loadAppState = async (): Promise<AppState> => {
       if (!parsed.taskTemplates) {
         parsed.taskTemplates = [];
         console.log('⚠️  [storage] Added missing taskTemplates array');
+      }
+      
+      // Ensure petState exists and has required properties
+      if (!parsed.petState || parsed.petState.xp === undefined || parsed.petState.stageIndex === undefined) {
+        console.error('❌ [storage] Invalid petState detected:', parsed.petState);
+        console.log('🔧 [storage] Resetting petState to default');
+        parsed.petState = { ...DEFAULT_PET_STATE };
       }
       
       return parsed;
@@ -141,13 +150,14 @@ export const loadAppState = async (): Promise<AppState> => {
   const today = getTodayKey();
   const defaultState: AppState = {
     tasks: getDefaultTasks(today),
-    petState: DEFAULT_PET_STATE,
-    settings: DEFAULT_SETTINGS,
+    petState: { ...DEFAULT_PET_STATE }, // Create a new object to avoid reference issues
+    settings: { ...DEFAULT_SETTINGS },
     currentTaskIndex: 0,
     lastRolloverDate: today,
     taskTemplates: [],
   };
   
+  console.log('💾 [storage] Creating default state with petState:', defaultState.petState);
   console.log('💾 [storage] Saving default state...');
   await saveAppState(defaultState);
   return defaultState;

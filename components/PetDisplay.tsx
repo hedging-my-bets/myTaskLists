@@ -15,6 +15,24 @@ export default function PetDisplay({ petState }: PetDisplayProps) {
   const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? colors.dark : colors.light;
   
+  // Safety checks
+  if (!petState) {
+    console.error('❌ [PetDisplay] petState is undefined');
+    return null;
+  }
+  
+  if (petState.stageIndex === undefined || petState.stageIndex === null) {
+    console.error('❌ [PetDisplay] petState.stageIndex is undefined or null:', petState);
+    return null;
+  }
+  
+  if (petState.xp === undefined || petState.xp === null) {
+    console.error('❌ [PetDisplay] petState.xp is undefined or null:', petState);
+    return null;
+  }
+  
+  console.log('🐾 [PetDisplay] Rendering with petState:', { xp: petState.xp, stageIndex: petState.stageIndex });
+  
   const currentStage = getPetStage(petState.stageIndex);
   const progress = getProgressToNextStage(petState.xp, petState.stageIndex);
   const nextStage = PET_STAGES[petState.stageIndex + 1];

@@ -174,10 +174,7 @@ ${currentTask ? `
         >
           {/* Pet Display */}
           <Animated.View entering={FadeIn} layout={Layout} style={styles.section}>
-            <PetDisplay
-              xp={state.petState.xp}
-              stageIndex={state.petState.stageIndex}
-            />
+            <PetDisplay petState={state.petState} />
           </Animated.View>
 
           {/* Debug Button */}
